@@ -7,8 +7,7 @@
     {
       "world": "MAIN",
       "matches": ["https://www1.ufrgs.br/PortalEnsino/GradeHorarios/index.php"],
-      "js": ["src/observer.js"],
-      "run_at": "document_start"
+      "js": ["src/observer.js"]
     }
   ]
   

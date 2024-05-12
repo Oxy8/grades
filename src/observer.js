@@ -57,24 +57,31 @@ function insereSeletorTurmas() {
     botaoSelecionaTurmas.addEventListener("click", MostraTabelaTurmasDisponiveis);
     
     const paragBotaoSelecionaTurmas = document.createElement('p');
+    paragBotaoSelecionaTurmas.setAttribute('style', 'padding: 20px;');
     paragBotaoSelecionaTurmas.className = "paragBotoes";
     paragBotaoSelecionaTurmas.appendChild(botaoSelecionaTurmas);
     cellBotaoSelecionaTurmas.appendChild(paragBotaoSelecionaTurmas);
 }
 
 function MostraTabelaTurmasDisponiveis() {
+    
     // aqui eu tenho que limpar possíveis adições prévias de
     // MostraTabelaTurmasDisponiveis() && InsereBotoesMostraGrades()
 
-
     var tabelaSelecaoTurmas = ObtemTabelaTurmasDisponiveis();
 
-    let tabela = divAtividades.getElementsByTagName("table")[0];
+    let tabelaAtividades = divAtividades.getElementsByTagName("table")[0];
 
-    let rowBotaoAtualiza = tabela.insertRow(5);
-    let cellBotaoAtualiza = rowBotaoAtualiza.insertCell(0);
+    let rowTabelaTurmas = tabelaAtividades.insertRow(5);
+    let cellTabelaTurmas = rowTabelaTurmas.insertCell(0);
+    cellTabelaTurmas.style.whiteSpace = 'nowrap';
+    cellTabelaTurmas.setAttribute("width", "100%");
 
-    cellBotaoAtualiza.appendChild(tabelaSelecaoTurmas);
+    
+
+    cellTabelaTurmas.appendChild(tabelaSelecaoTurmas);
+
+    divAtividades.setAttribute("TabelaTurmas", "true");
 
     //=========================================================================
 
@@ -83,6 +90,8 @@ function MostraTabelaTurmasDisponiveis() {
 }
 
 function InsereBotoesMostraGrades() {
+
+    // Botoes ja foram inseridos?
 
     let tabela = divAtividades.getElementsByTagName("table")[0];
 
@@ -104,10 +113,13 @@ function InsereBotoesMostraGrades() {
     botaoGradeUnica.addEventListener("click", MostraTabelaTurmasDisponiveis);
     
     const paragBotoesGrades = document.createElement('p');
+    paragBotoesGrades.setAttribute('style', 'padding: 20px;');
     paragBotoesGrades.className = "paragBotoes";
     paragBotoesGrades.appendChild(botaoGrades);
     paragBotoesGrades.appendChild(botaoGradeUnica);
     cellBotoesGrades.appendChild(paragBotoesGrades);
+
+    divAtividades.setAttribute("BotoesGrades", "true");
 
 }
 
@@ -143,6 +155,8 @@ function ObtemTabelaTurmasDisponiveis() {
                 var newRow = row.cloneNode(true);
 
                 var celulaBotao = newRow.insertCell(0);
+                celulaBotao.setAttribute("align", "center");
+                celulaBotao.setAttribute('valign', 'middle');
                 var checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';             
                 celulaBotao.appendChild(checkbox);
@@ -151,8 +165,63 @@ function ObtemTabelaTurmasDisponiveis() {
             }
         });
     }
+
+    var titulo = obtemTituloTabelaTurmas();
+    tabelaSelecaoTurmas.insertBefore(titulo, tabelaSelecaoTurmas.firstChild);
     
     return tabelaSelecaoTurmas;
+}
+
+function obtemTituloTabelaTurmas() {
+    
+    var newRow = document.createElement("tr");
+    newRow.setAttribute("valign", "middle");
+
+    var cell0 = document.createElement("td");
+    cell0.className = "th1";
+    cell0.setAttribute("align", "center");
+    cell0.setAttribute("width", "10%");
+    newRow.appendChild(cell0);
+
+    var cell1 = document.createElement("td");
+    cell1.className = "th1";
+    cell1.setAttribute("align", "center");
+    cell1.setAttribute("width", "32%");
+    cell1.textContent = "Atividade de Ensino";
+    newRow.appendChild(cell1);
+
+    var cell2 = document.createElement("td");
+    cell2.className = "th1";
+    cell2.setAttribute("align", "center");
+    cell2.innerHTML = "Carga Horária";
+    newRow.appendChild(cell2);
+
+    var cell3 = document.createElement("td");
+    cell3.className = "th1";
+    cell3.setAttribute("align", "center");
+    cell3.textContent = "Turma";
+    newRow.appendChild(cell3);
+
+    var cell4 = document.createElement("td");
+    cell4.className = "th1";
+    cell4.setAttribute("align", "center");
+    cell4.textContent = "Vagas Oferecidas";
+    newRow.appendChild(cell4);
+
+    var cell5 = document.createElement("td");
+    cell5.className = "th1";
+    cell5.setAttribute("align", "center");
+    cell5.setAttribute("width", "25%");
+    cell5.textContent = "Horário-Período-Local";
+    newRow.appendChild(cell5);
+
+    var cell6 = document.createElement("td");
+    cell6.className = "th1";
+    cell6.setAttribute("align", "center");
+    cell6.textContent = "Professor(es)";
+    newRow.appendChild(cell6);
+
+    return newRow;
 }
 
 

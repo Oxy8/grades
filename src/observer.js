@@ -32,12 +32,6 @@ observer.observe(divAtividades, {
     subtree: false
 });
 
-
-
-
-
-
-
 //======================================//
 
 //======================================//
@@ -66,63 +60,7 @@ function insereSeletorTurmas() {
     paragBotaoSelecionaTurmas.className = "paragBotoes";
     paragBotaoSelecionaTurmas.appendChild(botaoSelecionaTurmas);
     cellBotaoSelecionaTurmas.appendChild(paragBotaoSelecionaTurmas);
-
-
-
-
 }
-
-
-/*
-function MostraTabelaTurmasDisponiveis() {
-    
-    var curriculoSelectVal = document.getElementById( "Curriculo" ).value;
-    const [CodCur, CodHab] = curriculoSelectVal.split("/").map(item => item.trim());
-
-    var Semestre = document.getElementById( "PeriodoLetivo" ).value;
-
-    var cadeirasSelecionadas = Array.from(document.getElementById( "AtivEnsinoSelecionadas" ).options);
-    var codigosCadeirasSelecionadas = cadeirasSelecionadas.map(item => {
-        return item.value.split(",")[1].trim();
-    });
-
-    for (var CodAtiv of codigosCadeirasSelecionadas) {
-        $.get('/PortalEnsino/GraduacaoAluno/view/HorarioAtividade.php', {
-            CodAtiv: CodAtiv,
-            CodHab: CodHab,
-            CodCur: CodCur,
-            Sem: Semestre
-        }, data => {
-            
-            var tableElement = pegaTabelaTurma(data);
-            
-            for (var i = 0; i < tableElement.rows.length; i++) {
-                
-                var celulaHorarios = tableElement.rows[i].cells[4];
-                for (var child of celulaHorarios.children) {
-                    
-                    var toBeParsed = child.innerHTML.split("<br>", 1)[0];
-                    
-                    const toBeParsedSplit= toBeParsed.trim().split(" ");
-                    if (toBeParsedSplit.length == 5) {
-                        const [Dia, HorarioInicio, , , NumeroPeriodos] = toBeParsedSplit;
-                        
-                        console.log(Dia);
-                        console.log(HorarioInicio);
-                        console.log(NumeroPeriodos);
-
-                        // vou ter uma tabela 7x16, onde serão marcados os períodos.
-                        // cada cadeira vai ter a sua própria tabela.
-
-                        // Depois para montar horários, criar função verifica conflitos horários.
-                    }
-                }
-            }
-        });
-    }
-}
-*/
-
 
 function MostraTabelaTurmasDisponiveis() {
     // aqui eu tenho que limpar possíveis adições prévias de
@@ -234,14 +172,52 @@ function pegaTabelaTurma(htmlString) {
 // armazena em algum lugar essa tabela para uso futuro?
 
 
+/*
+function MostraTabelaTurmasDisponiveis() {
+    
+    var curriculoSelectVal = document.getElementById( "Curriculo" ).value;
+    const [CodCur, CodHab] = curriculoSelectVal.split("/").map(item => item.trim());
 
-// Obter a tabela me ajuda de alguma maneira?
-// é  mais fácil fazer parsing de "Terça 13:30 - 15:10 (2)" ou do código da cadeira?
-// "Segunda 07:30 - 08:20 (1)" é sempre o mesmo formato.
-// .split(" ")
-// Split vai gerar: [Segunda, 07:30, -, 08:20, (1)]
-// usar [0] pro dia da semana, [1] pro primeiro período da cadeira, [4] pro número de períodos.
-// são todas as informações necessárias (períodos tem sempre 50min).
+    var Semestre = document.getElementById( "PeriodoLetivo" ).value;
 
-// analisar bem certinho qual a estrutura de display
-// Sempre tem parenteses para indicar períodos?
+    var cadeirasSelecionadas = Array.from(document.getElementById( "AtivEnsinoSelecionadas" ).options);
+    var codigosCadeirasSelecionadas = cadeirasSelecionadas.map(item => {
+        return item.value.split(",")[1].trim();
+    });
+
+    for (var CodAtiv of codigosCadeirasSelecionadas) {
+        $.get('/PortalEnsino/GraduacaoAluno/view/HorarioAtividade.php', {
+            CodAtiv: CodAtiv,
+            CodHab: CodHab,
+            CodCur: CodCur,
+            Sem: Semestre
+        }, data => {
+            
+            var tableElement = pegaTabelaTurma(data);
+            
+            for (var i = 0; i < tableElement.rows.length; i++) {
+                
+                var celulaHorarios = tableElement.rows[i].cells[4];
+                for (var child of celulaHorarios.children) {
+                    
+                    var toBeParsed = child.innerHTML.split("<br>", 1)[0];
+                    
+                    const toBeParsedSplit= toBeParsed.trim().split(" ");
+                    if (toBeParsedSplit.length == 5) {
+                        const [Dia, HorarioInicio, , , NumeroPeriodos] = toBeParsedSplit;
+                        
+                        console.log(Dia);
+                        console.log(HorarioInicio);
+                        console.log(NumeroPeriodos);
+
+                        // vou ter uma tabela 7x16, onde serão marcados os períodos.
+                        // cada cadeira vai ter a sua própria tabela.
+
+                        // Depois para montar horários, criar função verifica conflitos horários.
+                    }
+                }
+            }
+        });
+    }
+}
+*/

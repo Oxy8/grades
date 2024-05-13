@@ -1,10 +1,11 @@
 
 #TabelaSelecaoTurmas tr:nth-child(even) td {
 	background-color: #efefef !important;
-
+	vertical-align: middle;
 }
 
-#TabelaSelecaoTurma tr {
+#TabelaSelecaoTurmas tr:nth-child(odd) td {
+	background-color: #ffffff !important;
 	vertical-align: middle;
 }
 

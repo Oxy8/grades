@@ -124,16 +124,18 @@ function ObtemTabelaTurmasDisponiveis() {
 
             for (var row of tableElement.rows) {
 
-                var newRow = row.cloneNode(true);
+                var rowCopy = row.cloneNode(true);
 
-                var celulaBotao = newRow.insertCell(0);
+                var celulaBotao = rowCopy.insertCell(0);
                 celulaBotao.setAttribute("align", "center");
                 celulaBotao.setAttribute('valign', 'middle');
                 var checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';       
                 celulaBotao.appendChild(checkbox);
 
-                tabelaSelecaoTurmas.appendChild(newRow);
+                rowCopy.className = "modelo1";
+
+                tabelaSelecaoTurmas.appendChild(rowCopy);
             }
         });
     }
@@ -251,6 +253,25 @@ function mostraGrades() {
     // Ao mesmo tempo, faz o parsing dos horários dessa cadeira, e constrói
     // os 12 bytes que codificam os horários. (6 dias por semanas, 16 horários
     // possíveis por dia).
+
+    // As funções: geraStringsTurmas(), que gera lista com "INF01048 - A - 24"
+    // para todas turmas
+
+    // parseHorariosTurmas(), retorna array com  12 bytes do horário para cada turma.
+
+    // Função final que recebe essas duas arrays e processa tudo ( WebAssembly).
+}
+
+function geraStringsTurmas() {
+    
+    var relacaoCodigosCadeiras = obtemCodigosCadeiras();
+
+    // Algoritmo trivial é quadrático, mas como são 30 cadeiras no max,
+    // com cerca de 3 turmas por cadeira, vão ser apenas 2700 comparações no max
+    // Eu espero que o javascript tanke isso.
+
+    // Ficar navegando pelo DOM pra cada item também é meio bosta,
+    // Novamente torcer pro javascript tankar issaqui.
 }
 
 

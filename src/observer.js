@@ -1,4 +1,6 @@
-var observer = new MutationObserver(
+//======================================//
+
+var observerDivAtividades = new MutationObserver(
   
     function(records, observer) {
       
@@ -24,8 +26,7 @@ var observer = new MutationObserver(
 )
 
 const divAtividades = document.getElementById("divAtividades");
-  
-observer.observe(divAtividades, { 
+observerDivAtividades.observe(divAtividades, { 
     childList: true,
     attributes: false,
     characterData: false,
@@ -230,7 +231,7 @@ function InsereBotoesMostraGrades() {
     botaoGradeUnica.type = "button";
     botaoGradeUnica.value = "Mostrar Grade Única de Horários";
 
-    botaoGrades.addEventListener("click", obtemCodigosCadeiras);
+    botaoGrades.addEventListener("click", constroiParStringsHorariosTurmas);
     botaoGradeUnica.addEventListener("click", constroiParStringsHorariosTurmas);
     
     const paragBotoesGrades = document.createElement('p');
@@ -263,7 +264,10 @@ function mostraGrades() {
     // Função final que recebe essas duas arrays e processa tudo ( WebAssembly).
 }
 
-function constroiParStringsHorariosTurmas() {
+
+// é chamada por obtemCodigosCadeiras();
+function constroiParStringsHorariosTurmasInner(relacaoCodigosCadeiras) {
+
     var tabelaSelecaoTurmas = document.getElementById("TabelaSelecaoTurmas");
 
     for (var i = 1; i < tabelaSelecaoTurmas.rows.length; i++) {
@@ -275,7 +279,13 @@ function constroiParStringsHorariosTurmas() {
             var celulaHorarios = tabelaSelecaoTurmas.rows[i].cells[5];
             var horarioCodificado = parseHorarioTurma(celulaHorarios); // Contem array de 6 uint16 com horário codificado dentro.
 
+            var AtividadeDeEnsino = tabelaSelecaoTurmas.rows[i].cells[1].textContent.trim();
+            var Turma             = tabelaSelecaoTurmas.rows[i].cells[3].textContent.trim();
+            var VagasOferecidas   = tabelaSelecaoTurmas.rows[i].cells[4].textContent.trim();
+            var stringTurma = geraStringTurma(relacaoCodigosCadeiras, AtividadeDeEnsino, Turma, VagasOferecidas);
+
             console.log(horarioCodificado);
+            console.log(stringTurma);
             
         }        
     }
@@ -337,21 +347,23 @@ function codificaUmHorario(Dia, HorarioInicio, NumeroPeriodos, arrayHorariosCodi
     return arrayHorariosCodificados;
 }
 
-function geraStringsTurmas() {
-    
-    var relacaoCodigosCadeiras = obtemCodigosCadeiras();
+function geraStringTurma(relacaoCodigosCadeiras, AtividadeDeEnsino, Turma, VagasOferecidas) {
 
-    // Algoritmo trivial é quadrático, mas como são 30 cadeiras no max,
-    // com cerca de 3 turmas por cadeira, vão ser apenas 2700 comparações no max
-    // Eu espero que o javascript tanke isso.
+    for (var pair of relacaoCodigosCadeiras) {
+        
+        let [CodigoD, NomeD] = pair;
 
-    // Ficar navegando pelo DOM pra cada item também é meio bosta,
-    // Novamente torcer pro javascript tankar issaqui.
+        if (NomeD.trim() == AtividadeDeEnsino) {
+            return (CodigoD + " - " + Turma + " - " + VagasOferecidas);
+        }
+    }
 }
 
+function constroiParStringsHorariosTurmas() {
 
-// retorna array com relação códigos-nomes.
-function obtemCodigosCadeiras() {
+    // Primeiro obtem pares código e nome da cadeira.
+    // depois chama constroiParStringsHorariosTurmasInner,
+    // que realmente faz o trabalho.
     
     var arrayCodigosNomesCadeiras = [];
     
@@ -375,71 +387,10 @@ function obtemCodigosCadeiras() {
 
             for (var codigo of fieldsetCodigosCadeiras) {
                 arrayCodigosNomesCadeiras.push(codigo.textContent.split(" - "));
+            //  [ ["INF01124", "Classificação e Pesquisa de Dados"], [...], [...] ]
             }
-
-            divAtividades.appendChild(tempResponse);
-
-        });
-    }
-    
-    return arrayCodigosNomesCadeiras;
-}
-
-
-// A partir do que eu tenho, como eu obtenho o código da cadeira?
-
-// Pega tabela me retorna tabela com info de 1 turma.
-// Criar botão que quando clicado, mostra a tabela
-// de seleção de turmas, e ao mesmo tempo,
-// armazena em algum lugar essa tabela para uso futuro?
-
-
-/*
-function MostraTabelaTurmasDisponiveis() {
-    
-    var curriculoSelectVal = document.getElementById( "Curriculo" ).value;
-    const [CodCur, CodHab] = curriculoSelectVal.split("/").map(item => item.trim());
-
-    var Semestre = document.getElementById( "PeriodoLetivo" ).value;
-
-    var cadeirasSelecionadas = Array.from(document.getElementById( "AtivEnsinoSelecionadas" ).options);
-    var codigosCadeirasSelecionadas = cadeirasSelecionadas.map(item => {
-        return item.value.split(",")[1].trim();
-    });
-
-    for (var CodAtiv of codigosCadeirasSelecionadas) {
-        $.get('/PortalEnsino/GraduacaoAluno/view/HorarioAtividade.php', {
-            CodAtiv: CodAtiv,
-            CodHab: CodHab,
-            CodCur: CodCur,
-            Sem: Semestre
-        }, data => {
-            
-            var tableElement = pegaTabelaTurma(data);
-            
-            for (var i = 0; i < tableElement.rows.length; i++) {
-                
-                var celulaHorarios = tableElement.rows[i].cells[4];
-                for (var child of celulaHorarios.children) {
-                    
-                    var toBeParsed = child.innerHTML.split("<br>", 1)[0];
-                    
-                    const toBeParsedSplit= toBeParsed.trim().split(" ");
-                    if (toBeParsedSplit.length == 5) {
-                        const [Dia, HorarioInicio, , , NumeroPeriodos] = toBeParsedSplit;
-                        
-                        console.log(Dia);
-                        console.log(HorarioInicio);
-                        console.log(NumeroPeriodos);
-
-                        // vou ter uma tabela 7x16, onde serão marcados os períodos.
-                        // cada cadeira vai ter a sua própria tabela.
-
-                        // Depois para montar horários, criar função verifica conflitos horários.
-                    }
-                }
-            }
+        }).always(function() {
+            constroiParStringsHorariosTurmasInner(arrayCodigosNomesCadeiras)
         });
     }
 }
-*/

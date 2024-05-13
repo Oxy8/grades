@@ -97,7 +97,7 @@ function MostraTabelaTurmasDisponiveis() {
 
 function ObtemTabelaTurmasDisponiveis() {
     
-    var tabelaSelecaoTurmas = document.createElement('div');
+    var tabelaSelecaoTurmas = document.createElement("table");
     tabelaSelecaoTurmas.id = "TabelaSelecaoTurmas";
 
     //=========================================================================
@@ -231,7 +231,7 @@ function InsereBotoesMostraGrades() {
     botaoGradeUnica.value = "Mostrar Grade Única de Horários";
 
     botaoGrades.addEventListener("click", obtemCodigosCadeiras);
-    botaoGradeUnica.addEventListener("click", obtemCodigosCadeiras);
+    botaoGradeUnica.addEventListener("click", constroiParStringsHorariosTurmas);
     
     const paragBotoesGrades = document.createElement('p');
     paragBotoesGrades.setAttribute('style', 'padding: 20px;');
@@ -254,12 +254,87 @@ function mostraGrades() {
     // os 12 bytes que codificam os horários. (6 dias por semanas, 16 horários
     // possíveis por dia).
 
-    // As funções: geraStringsTurmas(), que gera lista com "INF01048 - A - 24"
-    // para todas turmas
+    // geraStringTurma() gera string do tipo "INF01048 - A - 24" para cada turma
 
-    // parseHorariosTurmas(), retorna array com  12 bytes do horário para cada turma.
+    // parseHorarioTurma() gera bytes com horário para cada turma.
+
+    // constroiParStringsHorariosTurmas() faz a chamada de geraStringTurma() e parseHorarioTurma()
 
     // Função final que recebe essas duas arrays e processa tudo ( WebAssembly).
+}
+
+function constroiParStringsHorariosTurmas() {
+    var tabelaSelecaoTurmas = document.getElementById("TabelaSelecaoTurmas");
+
+    for (var i = 1; i < tabelaSelecaoTurmas.rows.length; i++) {
+
+        var celulaCheckbox = tabelaSelecaoTurmas.rows[i].cells[0];
+
+        if (celulaCheckbox.firstChild.checked) { // Chance de dar caca ~=99%
+            
+            var celulaHorarios = tabelaSelecaoTurmas.rows[i].cells[5];
+            var horarioCodificado = parseHorarioTurma(celulaHorarios); // Contem array de 6 uint16 com horário codificado dentro.
+
+            console.log(horarioCodificado);
+            
+        }        
+    }
+
+}
+
+function parseHorarioTurma(celulaHorarios) {
+
+    var horariosCodificados = new Uint16Array(6);
+
+    for (var child of celulaHorarios.children) {
+                
+        var toBeParsed = child.innerHTML.split("<br>", 1)[0];
+        
+        const toBeParsedSplit= toBeParsed.trim().split(" ");
+        if (toBeParsedSplit.length == 5) {
+            const [Dia, HorarioInicio, , , NumeroPeriodos] = toBeParsedSplit;
+            
+            horariosCodificados = codificaUmHorario(Dia, HorarioInicio, NumeroPeriodos, horariosCodificados);
+        }
+    }
+
+    return horariosCodificados;
+}
+
+function codificaUmHorario(Dia, HorarioInicio, NumeroPeriodos, arrayHorariosCodificados) {
+    var indexDia;
+    var valHorario;
+    var quantHorarios;
+
+    switch (Dia) {
+        case "Segunda":
+            indexDia = 0;
+            break;
+        case "Terça":
+            indexDia = 1;
+            break;
+        case "Quarta":
+            indexDia = 2;
+            break;
+        case "Quinta":
+            indexDia = 3;
+            break;
+        case "Sexta":
+            indexDia = 4;
+            break;
+        default:          // Sábado
+            indexDia = 5;    
+    }
+
+    valHorario = parseInt(HorarioInicio.split(":")[0], 10) - 7;
+
+    quantHorarios = parseInt(NumeroPeriodos.replace(/[()]/g, ''), 10);
+
+    for (i=0; i<quantHorarios; i++) {
+        arrayHorariosCodificados[indexDia] |= Math.pow(2, (valHorario + i));
+    }
+
+    return arrayHorariosCodificados;
 }
 
 function geraStringsTurmas() {

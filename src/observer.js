@@ -207,7 +207,10 @@ function pegaTabelaTurma(htmlString) {
     div.innerHTML = htmlString.trim();
   
     var tableElement = div.getElementsByTagName('table')[0];
-    tableElement.deleteRow(0);
+
+    if (tableElement != undefined) {
+        tableElement.deleteRow(0);
+    }
 
     return tableElement;
 }
@@ -247,49 +250,38 @@ function InsereBotoesMostraGrades() {
 }
 
 function mostraGrades() {
-    // itera tabela de turmas, vê quais que estão selecionadas,
-    // para aquelas que estiverem selecionadas, compara nome da cadeira com 
-    // tabela gerada por obtemTabelaCodigosCadeiras() e juntamente com a letra
-    // da turma e numero de vagas constrói string do tipo: "INF01048 - A - 24"
-    // Ao mesmo tempo, faz o parsing dos horários dessa cadeira, e constrói
-    // os 12 bytes que codificam os horários. (6 dias por semanas, 16 horários
-    // possíveis por dia).
 
-    // geraStringTurma() gera string do tipo "INF01048 - A - 24" para cada turma
-
-    // parseHorarioTurma() gera bytes com horário para cada turma.
-
-    // constroiParStringsHorariosTurmas() faz a chamada de geraStringTurma() e parseHorarioTurma()
-
-    // Função final que recebe essas duas arrays e processa tudo ( WebAssembly).
 }
 
 
-// é chamada por obtemCodigosCadeiras();
-function constroiParStringsHorariosTurmasInner(relacaoCodigosCadeiras) {
-
+async function constroiParStringsHorariosTurmas() {
     var tabelaSelecaoTurmas = document.getElementById("TabelaSelecaoTurmas");
 
     for (var i = 1; i < tabelaSelecaoTurmas.rows.length; i++) {
-
         var celulaCheckbox = tabelaSelecaoTurmas.rows[i].cells[0];
 
-        if (celulaCheckbox.firstChild.checked) { // Chance de dar caca ~=99%
-            
+        if (celulaCheckbox.firstChild.checked) {
             var celulaHorarios = tabelaSelecaoTurmas.rows[i].cells[5];
-            var horarioCodificado = parseHorarioTurma(celulaHorarios); // Contem array de 6 uint16 com horário codificado dentro.
+            var horarioCodificado = parseHorarioTurma(celulaHorarios);
 
             var AtividadeDeEnsino = tabelaSelecaoTurmas.rows[i].cells[1].textContent.trim();
-            var Turma             = tabelaSelecaoTurmas.rows[i].cells[3].textContent.trim();
-            var VagasOferecidas   = tabelaSelecaoTurmas.rows[i].cells[4].textContent.trim();
-            var stringTurma = geraStringTurma(relacaoCodigosCadeiras, AtividadeDeEnsino, Turma, VagasOferecidas);
+            var Turma = tabelaSelecaoTurmas.rows[i].cells[3].textContent.trim();
+            var VagasOferecidas = tabelaSelecaoTurmas.rows[i].cells[4].textContent.trim();
 
-            console.log(horarioCodificado);
-            console.log(stringTurma);
-            
-        }        
+            try {
+                var data = await obtemCodigosCadeiras();
+
+                console.log(data);
+
+                var stringTurma = geraStringTurma(data, AtividadeDeEnsino, Turma, VagasOferecidas);
+
+                console.log(horarioCodificado);
+                console.log(stringTurma);
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
     }
-
 }
 
 function parseHorarioTurma(celulaHorarios) {
@@ -359,38 +351,41 @@ function geraStringTurma(relacaoCodigosCadeiras, AtividadeDeEnsino, Turma, Vagas
     }
 }
 
-function constroiParStringsHorariosTurmas() {
-
-    // Primeiro obtem pares código e nome da cadeira.
-    // depois chama constroiParStringsHorariosTurmasInner,
-    // que realmente faz o trabalho.
-    
-    var arrayCodigosNomesCadeiras = [];
-    
-    var cadeirasSelecionadas = Array.from(document.getElementById( "AtivEnsinoSelecionadas" ).options);
-    var codigosCadeirasSelecionadas = cadeirasSelecionadas.map(item => {
-        return item.value.split(",")[1].trim();
-    });
-
-    sGrupoMatricula = $('#GrupoMatricula').val();
-    iPeriodoLetivo = $('#PeriodoLetivo').val();
-
-    if ((iPeriodoLetivo != '') && (sGrupoMatricula != ''))
-    {
-        aDados = {GradeUnica: 1, PeriodoLetivo: iPeriodoLetivo, GrupoMatricula: sGrupoMatricula, 'Atividades[]': codigosCadeirasSelecionadas};
-
-        $.post('/PortalEnsino/GradeHorarios/index.php?r=grade/montaGrade', aDados, function(responseData) {
-
-            var tempResponse = document.createElement('div');
-            tempResponse.innerHTML = responseData;
-            fieldsetCodigosCadeiras = tempResponse.getElementsByTagName("fieldset")[0].getElementsByTagName("label");
-
-            for (var codigo of fieldsetCodigosCadeiras) {
-                arrayCodigosNomesCadeiras.push(codigo.textContent.split(" - "));
-            //  [ ["INF01124", "Classificação e Pesquisa de Dados"], [...], [...] ]
-            }
-        }).always(function() {
-            constroiParStringsHorariosTurmasInner(arrayCodigosNomesCadeiras)
+function obtemCodigosCadeiras() {
+    return new Promise((resolve, reject) => {
+        var cadeirasSelecionadas = Array.from(document.getElementById("AtivEnsinoSelecionadas").options);
+        var codigosCadeirasSelecionadas = cadeirasSelecionadas.map(item => {
+            return item.value.split(",")[1].trim();
         });
-    }
+
+        var sGrupoMatricula = $('#GrupoMatricula').val();
+        var iPeriodoLetivo = $('#PeriodoLetivo').val();
+
+        if ((iPeriodoLetivo != '') && (sGrupoMatricula != '')) {
+            var aDados = {
+                GradeUnica: 1,
+                PeriodoLetivo: iPeriodoLetivo,
+                GrupoMatricula: sGrupoMatricula,
+                'Atividades[]': codigosCadeirasSelecionadas
+            };
+
+            $.post('/PortalEnsino/GradeHorarios/index.php?r=grade/montaGrade', aDados, function(responseData) {
+                var arrayCodigosNomesCadeiras = [];
+
+                var tempResponse = document.createElement('div');
+                tempResponse.innerHTML = responseData;
+                var fieldsetCodigosCadeiras = tempResponse.getElementsByTagName("fieldset")[0].getElementsByTagName("label");
+
+                for (var codigo of fieldsetCodigosCadeiras) {
+                    arrayCodigosNomesCadeiras.push(codigo.textContent.split(" - "));
+                }
+
+                resolve(arrayCodigosNomesCadeiras);
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                reject(errorThrown);
+            });
+        } else {
+            reject('Missing required fields');
+        }
+    });
 }

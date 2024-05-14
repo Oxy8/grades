@@ -225,6 +225,7 @@ function InsereBotoesMostraGrades() {
     cellBotoesGrades.colSpan = 3;
 
     const botaoGrades = document.createElement('input');
+    
     botaoGrades.className = "button";
     botaoGrades.type = "button";
     botaoGrades.value = "Mostrar Grades de Horários";
@@ -234,8 +235,8 @@ function InsereBotoesMostraGrades() {
     botaoGradeUnica.type = "button";
     botaoGradeUnica.value = "Mostrar Grade Única de Horários";
 
-    botaoGrades.addEventListener("click", constroiParStringsHorariosTurmas);
-    botaoGradeUnica.addEventListener("click", constroiParStringsHorariosTurmas);
+    botaoGrades.addEventListener("click", mostraGrades);
+    botaoGradeUnica.addEventListener("click", constroiArrayInfoTurmas);
     
     const paragBotoesGrades = document.createElement('p');
     paragBotoesGrades.setAttribute('style', 'padding: 20px;');
@@ -249,12 +250,34 @@ function InsereBotoesMostraGrades() {
     */
 }
 
-function mostraGrades() {
+async function mostraGrades() {
+
+    var arrayInfoTurmas = await constroiArrayInfoTurmas();
+
+    var diferentesAtividades = [];
+    // Serve para detectar se numero de atividades selecionadas é diferente do
+    // numero de atividades para as quais fora escolhida alguma turma.
+    
+    var i = 0;
+    for (var tripla of arrayInfoTurmas) {
+
+        var aLength = diferentesAtividades.length;
+
+        if (aLength == 0 || tripla[0] != diferentesAtividades[aLength - 1][0][0]) {
+            diferentesAtividades.push([tripla]);
+        } else {
+            diferentesAtividades[aLength - 1].push(tripla);
+        }
+    }
+
+    console.log(diferentesAtividades);
 
 }
 
 
-async function constroiParStringsHorariosTurmas() {
+async function constroiArrayInfoTurmas() {
+
+    var arrayInfoTurmas = [];
 
     var tabelaSelecaoTurmas = document.getElementById("TabelaSelecaoTurmas");
 
@@ -273,11 +296,11 @@ async function constroiParStringsHorariosTurmas() {
 
             var stringTurma = geraStringTurma(data, AtividadeDeEnsino, Turma, VagasOferecidas);
 
-            console.log(horarioCodificado);
-            console.log(stringTurma);
+            arrayInfoTurmas.push([AtividadeDeEnsino, stringTurma, horarioCodificado]);
         }
     }
 
+    return arrayInfoTurmas;
 }
 
 function parseHorarioTurma(celulaHorarios) {
@@ -374,7 +397,9 @@ function obtemCodigosCadeiras() {
                 var fieldsetCodigosCadeiras = tempResponse.getElementsByTagName("fieldset")[0].getElementsByTagName("label");
 
                 for (var codigo of fieldsetCodigosCadeiras) {
-                    arrayCodigosNomesCadeiras.push(codigo.textContent.split(" - "));
+                    var i = codigo.textContent.indexOf(' - ');
+                    var splits = [codigo.textContent.slice(0,i), codigo.textContent.slice(i+3)];
+                    arrayCodigosNomesCadeiras.push(splits);
                 }
 
                 resolve(arrayCodigosNomesCadeiras);

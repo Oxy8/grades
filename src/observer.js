@@ -255,7 +255,10 @@ function mostraGrades() {
 
 
 async function constroiParStringsHorariosTurmas() {
+
     var tabelaSelecaoTurmas = document.getElementById("TabelaSelecaoTurmas");
+
+    var data = await obtemCodigosCadeiras();
 
     for (var i = 1; i < tabelaSelecaoTurmas.rows.length; i++) {
         var celulaCheckbox = tabelaSelecaoTurmas.rows[i].cells[0];
@@ -268,20 +271,13 @@ async function constroiParStringsHorariosTurmas() {
             var Turma = tabelaSelecaoTurmas.rows[i].cells[3].textContent.trim();
             var VagasOferecidas = tabelaSelecaoTurmas.rows[i].cells[4].textContent.trim();
 
-            try {
-                var data = await obtemCodigosCadeiras();
+            var stringTurma = geraStringTurma(data, AtividadeDeEnsino, Turma, VagasOferecidas);
 
-                console.log(data);
-
-                var stringTurma = geraStringTurma(data, AtividadeDeEnsino, Turma, VagasOferecidas);
-
-                console.log(horarioCodificado);
-                console.log(stringTurma);
-            } catch (error) {
-                console.error('Error:', error);
-            }
+            console.log(horarioCodificado);
+            console.log(stringTurma);
         }
     }
+
 }
 
 function parseHorarioTurma(celulaHorarios) {
@@ -352,7 +348,8 @@ function geraStringTurma(relacaoCodigosCadeiras, AtividadeDeEnsino, Turma, Vagas
 }
 
 function obtemCodigosCadeiras() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
+
         var cadeirasSelecionadas = Array.from(document.getElementById("AtivEnsinoSelecionadas").options);
         var codigosCadeirasSelecionadas = cadeirasSelecionadas.map(item => {
             return item.value.split(",")[1].trim();
@@ -381,11 +378,7 @@ function obtemCodigosCadeiras() {
                 }
 
                 resolve(arrayCodigosNomesCadeiras);
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                reject(errorThrown);
             });
-        } else {
-            reject('Missing required fields');
         }
     });
 }

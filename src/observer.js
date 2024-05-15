@@ -444,8 +444,14 @@ function parseHorarioTurma(celulaHorarios) {
     for (var child of celulaHorarios.children) {
                 
         var toBeParsed = child.innerHTML.split("<br>", 1)[0];
+
         
-        const toBeParsedSplit= toBeParsed.trim().split(" ");
+        const toBeParsedSplit = toBeParsed.trim().split(" ");
+        // tem que considerar que alem de "Quinta 13:30 - 15:10 (2)",
+        // tambem podem aparecer no formato "N.I.".
+        // Nesse segundo caso, toBeParsedSplit.length será != 5,
+        // e portanto HorariosCodificados não será modificado.
+
         if (toBeParsedSplit.length == 5) {
             const [Dia, HorarioInicio, , , NumeroPeriodos] = toBeParsedSplit;
             
@@ -457,6 +463,7 @@ function parseHorarioTurma(celulaHorarios) {
 }
 
 function codificaUmHorario(Dia, HorarioInicio, NumeroPeriodos, arrayHorariosCodificados) {
+    
     var indexDia;
     var valHorario;
     var quantHorarios;

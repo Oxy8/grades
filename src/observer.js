@@ -127,6 +127,11 @@ function ObtemTabelaTurmasDisponiveis() {
             CodCur: CodCur,
             Sem: Semestre
         }, data => {
+
+            // data contem a tabela com listagem de todas turmas para uma determinada atividade.
+            
+            // Aqui tem que ser feito o tratamento de a cadeira não possuir nenhuma turma disponível.
+            // Senão, tentar acessar rows gera um erro.
             
             var tableElement = pegaTabelaTurma(data);
 
@@ -434,7 +439,7 @@ async function constroiArrayInfoTurmas() {
 
 function parseHorarioTurma(celulaHorarios) {
 
-    var HorariosCodificadosuniaoHorariosCodificadoss = new Uint16Array(6);
+    var HorariosCodificados = new Uint16Array(6);
 
     for (var child of celulaHorarios.children) {
                 
@@ -444,14 +449,14 @@ function parseHorarioTurma(celulaHorarios) {
         if (toBeParsedSplit.length == 5) {
             const [Dia, HorarioInicio, , , NumeroPeriodos] = toBeParsedSplit;
             
-            HorariosCodificadosuniaoHorariosCodificadoss = codificaUmHorario(Dia, HorarioInicio, NumeroPeriodos, HorariosCodificadosuniaoHorariosCodificadoss);
+            HorariosCodificados = codificaUmHorario(Dia, HorarioInicio, NumeroPeriodos, HorariosCodificados);
         }
     }
 
-    return HorariosCodificadosuniaoHorariosCodificadoss;
+    return HorariosCodificados;
 }
 
-function codificaUmHorario(Dia, HorarioInicio, NumeroPeriodos, arrayHorariosCodificadosuniaoHorariosCodificadoss) {
+function codificaUmHorario(Dia, HorarioInicio, NumeroPeriodos, arrayHorariosCodificados) {
     var indexDia;
     var valHorario;
     var quantHorarios;
@@ -481,10 +486,10 @@ function codificaUmHorario(Dia, HorarioInicio, NumeroPeriodos, arrayHorariosCodi
     quantHorarios = parseInt(NumeroPeriodos.replace(/[()]/g, ''), 10);
 
     for (i=0; i<quantHorarios; i++) {
-        arrayHorariosCodificadosuniaoHorariosCodificadoss[indexDia] |= Math.pow(2, (valHorario + i));
+        arrayHorariosCodificados[indexDia] |= Math.pow(2, (valHorario + i));
     }
 
-    return arrayHorariosCodificadosuniaoHorariosCodificadoss;
+    return arrayHorariosCodificados;
 }
 
 function geraStringTurma(relacaoCodigosCadeiras, AtividadeDeEnsino, Turma, VagasOferecidas) {

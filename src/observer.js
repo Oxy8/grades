@@ -12,8 +12,15 @@ var observerDivAtividades = new MutationObserver(
             totalRemoved += record.removedNodes.length;
         }
 
-        if (totalRemoved == 5) { // o que exatamente significa esse caso aqui?
-            //removeBotaoMostrarTurmas();
+        if (totalRemoved == 5) {
+            // o que exatamente significa esse caso aqui?
+            // Sob quais circunstâncias mais especificamente
+            // a página decide remover elementos, além de quando
+            // um novo curso é selecionado?
+
+            // removeBotaoMostrarTurmas();
+            // /\ inútil, mas deixa aqui caso a estrutura mude.
+
             console.log("Removed:" + totalRemoved)
         } 
 
@@ -236,7 +243,7 @@ function InsereBotoesMostraGrades() {
     botaoGradeUnica.value = "Mostrar Grade Única de Horários";
 
     botaoGrades.addEventListener("click", mostraGrades);
-    botaoGradeUnica.addEventListener("click", constroiArrayInfoTurmas);
+    botaoGradeUnica.addEventListener("click", mostraGradeUnica);
     
     const paragBotoesGrades = document.createElement('p');
     paragBotoesGrades.setAttribute('style', 'padding: 20px;');
@@ -250,28 +257,150 @@ function InsereBotoesMostraGrades() {
     */
 }
 
+async function mostraGradeUnica() {
+
+    var arrayInfoTurmas = await obtemArrayTurmasPorAtividade();
+
+    // chamada aqui com turmasPorAtividade para enfim, iterar cada uma das
+    // cadeira, e tentar montar tabelas.
+
+    // Monta array com todas possíveis combinações que não dão conflito
+    // (2 for loops e um verificador de conflitos no fim pra decidir se add
+    // na array ou não).
+    // (tem que adicionar um limite de tamanho tambem pra nao explodir a memoria)
+
+    // Depois pega cada um dos itens e processa em uma tabela, joga essa tabela no fim da página.
+    
+
+}
+
 async function mostraGrades() {
 
-    var arrayInfoTurmas = await constroiArrayInfoTurmas();
+    var turmasOrganizadasPorAtividade = await obtemArrayTurmasPorAtividade();
+    var quantAtividades = turmasOrganizadasPorAtividade.length;
 
-    var diferentesAtividades = [];
-    // Serve para detectar se numero de atividades selecionadas é diferente do
-    // numero de atividades para as quais fora escolhida alguma turma.
+    const indicesMaximosControle = new Array(quantAtividades).fill(0);
+    for (i=0; i<quantAtividades; i++) {
+        indicesMaximosControle[i] = turmasOrganizadasPorAtividade[i].length;
+    }
+
+    var indicesTurmaPorAtividade = new Array(quantAtividades).fill(0);
+
+    //===================================================================
+
+    var conjuntoArraysTurmasSemConflito = [];
+
+    var fim_do_loop = false;
+    proximo_set: while (fim_do_loop == false) {
+
+
+        var arrayTurmasSemConflito = [];
+
+        var verificaConflitos = new Uint16Array(6);
+        
+        for (i=0; i<quantAtividades; i++) {
+
+            var horarioCodificado = turmasOrganizadasPorAtividade[i][indicesTurmaPorAtividade[i]][2];
+
+
+            var conflito = verificaConflitoHorarioCodificado(verificaConflitos, horarioCodificado);
+
+            if (conflito) {
+                fim_do_loop = tentaIncrementarIndice(indicesMaximosControle, indicesTurmaPorAtividade, i);
+                // Tenta incrementar índica na posição atual, zerando as restantes.                
+                // Seta indicesTurmaPorAtividade como -1 no caso de se ter esgotado todos indices;
+
+                continue proximo_set;
+
+            } else {
+                uniaoHorariosCodificados(verificaConflitos, horarioCodificado);
+
+                arrayTurmasSemConflito.push(turmasOrganizadasPorAtividade[i][indicesTurmaPorAtividade[i]]);
+            }
+        }
+
+        // Tenta incrementar o índice da última atividade, cuidando por um possível overflow.
+        fim_do_loop = tentaIncrementarIndice(indicesMaximosControle, indicesTurmaPorAtividade, quantAtividades-1);
+
+        conjuntoArraysTurmasSemConflito.push(arrayTurmasSemConflito);
+    }
+
+    console.log("################");
+    console.log(conjuntoArraysTurmasSemConflito);
+}
+
+function tentaIncrementarIndice(indicesMaximosControle, indicesTurmaPorAtividade, indice) {
+    if (indice == -1) {
+        return true; // retorna erro aqui.
+    }
     
-    var i = 0;
-    for (var tripla of arrayInfoTurmas) {
+    indicesTurmaPorAtividade[indice] += 1;
+    if (indicesTurmaPorAtividade[indice] >= indicesMaximosControle[indice]) {
+        zeraDoIndiceAoFim(indicesTurmaPorAtividade, indice);
+        return tentaIncrementarIndice(indicesMaximosControle, indicesTurmaPorAtividade, indice-1);
+    }
 
-        var aLength = diferentesAtividades.length;
+    return false;
+}
 
-        if (aLength == 0 || tripla[0] != diferentesAtividades[aLength - 1][0][0]) {
-            diferentesAtividades.push([tripla]);
-        } else {
-            diferentesAtividades[aLength - 1].push(tripla);
+function zeraDoIndiceAoFim(array, indice) {
+    for (k=indice; k < array.length; k++) {
+        array[k] = 0;
+    }
+}
+
+function uniaoHorariosCodificados(horario1, horario2) {
+
+    for (j=0; j<horario1.length; j++) {
+        horario1[j] |= horario2[j];
+    }
+}
+
+function verificaConflitoHorarioCodificado(horario1, horario2) {
+ 
+    var diaHorario1;
+
+    for (j=0; j<horario1.length; j++) {
+        
+        diaHorario1 = horario1[j]; // Necessario para evitar modificar array original.
+        diaHorario1 &= horario2[j];
+        if (diaHorario1 != 0) {
+            return true; // Houve conflito.
         }
     }
 
-    console.log(diferentesAtividades);
+    /*
+    console.log("horario1");
+    console.log(horario1);
+    console.log("---");
+    */
 
+    return false; // Não houve conflito.
+}
+
+async function obtemArrayTurmasPorAtividade() {
+    
+    var arrayInfoTurmas = await constroiArrayInfoTurmas();
+
+    var turmasPorAtividade = [];
+
+    for (var tripla of arrayInfoTurmas) {
+
+        var aLength = turmasPorAtividade.length;
+
+        if (aLength == 0 || tripla[0] != turmasPorAtividade[aLength - 1][0][0]) {
+            turmasPorAtividade.push([tripla]);
+        } else {
+            turmasPorAtividade[aLength - 1].push(tripla);
+        }
+    }
+
+    var tabelaSelecaoTurmas = document.getElementById("AtivEnsinoSelecionadas");
+    if (tabelaSelecaoTurmas.children.length > turmasPorAtividade.length) {
+        alert("Existe pelo menos uma atividade para a qual não foi designada nenhuma turma. A grade será gerada, mas tenha isso em mente.");
+    }
+
+    return turmasPorAtividade;
 }
 
 
@@ -281,7 +410,7 @@ async function constroiArrayInfoTurmas() {
 
     var tabelaSelecaoTurmas = document.getElementById("TabelaSelecaoTurmas");
 
-    var data = await obtemCodigosCadeiras();
+    var codigosCadeiras = await obtemCodigosCadeiras();
 
     for (var i = 1; i < tabelaSelecaoTurmas.rows.length; i++) {
         var celulaCheckbox = tabelaSelecaoTurmas.rows[i].cells[0];
@@ -294,7 +423,7 @@ async function constroiArrayInfoTurmas() {
             var Turma = tabelaSelecaoTurmas.rows[i].cells[3].textContent.trim();
             var VagasOferecidas = tabelaSelecaoTurmas.rows[i].cells[4].textContent.trim();
 
-            var stringTurma = geraStringTurma(data, AtividadeDeEnsino, Turma, VagasOferecidas);
+            var stringTurma = geraStringTurma(codigosCadeiras, AtividadeDeEnsino, Turma, VagasOferecidas);
 
             arrayInfoTurmas.push([AtividadeDeEnsino, stringTurma, horarioCodificado]);
         }
@@ -305,7 +434,7 @@ async function constroiArrayInfoTurmas() {
 
 function parseHorarioTurma(celulaHorarios) {
 
-    var horariosCodificados = new Uint16Array(6);
+    var HorariosCodificadosuniaoHorariosCodificadoss = new Uint16Array(6);
 
     for (var child of celulaHorarios.children) {
                 
@@ -315,14 +444,14 @@ function parseHorarioTurma(celulaHorarios) {
         if (toBeParsedSplit.length == 5) {
             const [Dia, HorarioInicio, , , NumeroPeriodos] = toBeParsedSplit;
             
-            horariosCodificados = codificaUmHorario(Dia, HorarioInicio, NumeroPeriodos, horariosCodificados);
+            HorariosCodificadosuniaoHorariosCodificadoss = codificaUmHorario(Dia, HorarioInicio, NumeroPeriodos, HorariosCodificadosuniaoHorariosCodificadoss);
         }
     }
 
-    return horariosCodificados;
+    return HorariosCodificadosuniaoHorariosCodificadoss;
 }
 
-function codificaUmHorario(Dia, HorarioInicio, NumeroPeriodos, arrayHorariosCodificados) {
+function codificaUmHorario(Dia, HorarioInicio, NumeroPeriodos, arrayHorariosCodificadosuniaoHorariosCodificadoss) {
     var indexDia;
     var valHorario;
     var quantHorarios;
@@ -352,10 +481,10 @@ function codificaUmHorario(Dia, HorarioInicio, NumeroPeriodos, arrayHorariosCodi
     quantHorarios = parseInt(NumeroPeriodos.replace(/[()]/g, ''), 10);
 
     for (i=0; i<quantHorarios; i++) {
-        arrayHorariosCodificados[indexDia] |= Math.pow(2, (valHorario + i));
+        arrayHorariosCodificadosuniaoHorariosCodificadoss[indexDia] |= Math.pow(2, (valHorario + i));
     }
 
-    return arrayHorariosCodificados;
+    return arrayHorariosCodificadosuniaoHorariosCodificadoss;
 }
 
 function geraStringTurma(relacaoCodigosCadeiras, AtividadeDeEnsino, Turma, VagasOferecidas) {
@@ -371,7 +500,7 @@ function geraStringTurma(relacaoCodigosCadeiras, AtividadeDeEnsino, Turma, Vagas
 }
 
 function obtemCodigosCadeiras() {
-    return new Promise((resolve) => {
+    return new Promise((resolve) => {  // Tentar mover mais para baixo no corpo da func mais tarde.
 
         var cadeirasSelecionadas = Array.from(document.getElementById("AtivEnsinoSelecionadas").options);
         var codigosCadeirasSelecionadas = cadeirasSelecionadas.map(item => {

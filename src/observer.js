@@ -132,6 +132,11 @@ function ObtemTabelaTurmasDisponiveis() {
             
             // Aqui tem que ser feito o tratamento de a cadeira não possuir nenhuma turma disponível.
             // Senão, tentar acessar rows gera um erro.
+
+            // O fato de alguma atividade não possuir nenhuma turma faz com que
+            // o aviso informando que existe atividade sem turma selecionada sempre ocorra.
+
+            // Seria interessante ter um aviso diferente nesse caso, evita que fique confuso.
             
             var tableElement = pegaTabelaTurma(data);
 
@@ -262,6 +267,78 @@ function InsereBotoesMostraGrades() {
     */
 }
 
+// Recebe uma grade, retorna HTMLElement;
+function montaTabelaComGrade(grade) {
+    var tabela = geraTabelaVazia();
+
+    for (var turma of grade) {
+        adicionaTurmaTabela(tabela, turma);
+    }
+
+    return tabela;
+}
+// melhor criar a tabela e depois inserir um por um?
+
+// Como usar i e j para acessar 
+
+function geraTabelaVazia() {
+
+    const table = document.createElement("table");
+    const tableBody = document.createElement("tbody");
+  
+    for (let m = 0; m < 16; m++) {
+      const row = document.createElement("tr");
+
+        for (let n = 0; n < 6; n++) {
+            const cell = document.createElement("td");
+            row.appendChild(cell);
+        }
+
+        tableBody.appendChild(row);
+    }
+  
+    table.appendChild(tableBody);
+    table.setAttribute("border", "1");
+
+    return table;
+}
+
+// <label style="padding: 2px; color:#800000">        </label>
+function adicionaTurmaTabela(tabela, arrayTurma) {
+    
+    var stringTurma = arrayTurma[1];
+    var horarioCodificado = arrayTurma[2];
+
+
+    for (let m = 0; m < 6; m++) {
+        for (let n = 0; n < 16; n++) {
+            var twoPowN = Math.pow(2,n);
+            if ((horarioCodificado[m] & twoPowN) == twoPowN) {
+                
+                var label = document.createElement('label');
+                label.style.padding = '2px';
+                label.style.color = '#800000';
+
+                // preciso considerar cores de
+                // Atividades de Ensino com Turma Programada
+                // salvar cor na array de turma quando
+                // construindo stringTurma
+                
+                label.textContent = stringTurma;
+
+                var br = document.createElement('br');
+
+                tabela.rows[n].cells[m].appendChild(label);
+                tabela.rows[n].cells[m].appendChild(br);
+
+                console.log(tabela.rows[m].cells[n]);
+            }
+        }
+    }
+}
+  
+
+
 async function mostraGradeUnica() {
 
     var arrayInfoTurmas = await obtemArrayTurmasPorAtividade();
@@ -285,7 +362,7 @@ async function mostraGrades() {
     var quantAtividades = turmasOrganizadasPorAtividade.length;
 
     const indicesMaximosControle = new Array(quantAtividades).fill(0);
-    for (i=0; i<quantAtividades; i++) {
+    for (let i=0; i<quantAtividades; i++) {
         indicesMaximosControle[i] = turmasOrganizadasPorAtividade[i].length;
     }
 
@@ -303,7 +380,7 @@ async function mostraGrades() {
 
         var verificaConflitos = new Uint16Array(6);
         
-        for (i=0; i<quantAtividades; i++) {
+        for (let i=0; i<quantAtividades; i++) {
 
             var horarioCodificado = turmasOrganizadasPorAtividade[i][indicesTurmaPorAtividade[i]][2];
 
@@ -332,6 +409,11 @@ async function mostraGrades() {
 
     console.log("################");
     console.log(conjuntoArraysTurmasSemConflito);
+
+    for (var grade of conjuntoArraysTurmasSemConflito) {
+        var tabelaGrade = montaTabelaComGrade(grade);
+        document.body.appendChild(tabelaGrade);
+    }
 }
 
 function tentaIncrementarIndice(indicesMaximosControle, indicesTurmaPorAtividade, indice) {
@@ -349,14 +431,14 @@ function tentaIncrementarIndice(indicesMaximosControle, indicesTurmaPorAtividade
 }
 
 function zeraDoIndiceAoFim(array, indice) {
-    for (k=indice; k < array.length; k++) {
+    for (let k=indice; k < array.length; k++) {
         array[k] = 0;
     }
 }
 
 function uniaoHorariosCodificados(horario1, horario2) {
 
-    for (j=0; j<horario1.length; j++) {
+    for (let j=0; j<horario1.length; j++) {
         horario1[j] |= horario2[j];
     }
 }
@@ -365,7 +447,7 @@ function verificaConflitoHorarioCodificado(horario1, horario2) {
  
     var diaHorario1;
 
-    for (j=0; j<horario1.length; j++) {
+    for (let j=0; j<horario1.length; j++) {
         
         diaHorario1 = horario1[j]; // Necessario para evitar modificar array original.
         diaHorario1 &= horario2[j];
@@ -417,7 +499,7 @@ async function constroiArrayInfoTurmas() {
 
     var codigosCadeiras = await obtemCodigosCadeiras();
 
-    for (var i = 1; i < tabelaSelecaoTurmas.rows.length; i++) {
+    for (let i = 1; i < tabelaSelecaoTurmas.rows.length; i++) {
         var celulaCheckbox = tabelaSelecaoTurmas.rows[i].cells[0];
 
         if (celulaCheckbox.firstChild.checked) {
@@ -492,7 +574,7 @@ function codificaUmHorario(Dia, HorarioInicio, NumeroPeriodos, arrayHorariosCodi
 
     quantHorarios = parseInt(NumeroPeriodos.replace(/[()]/g, ''), 10);
 
-    for (i=0; i<quantHorarios; i++) {
+    for (let i=0; i<quantHorarios; i++) {
         arrayHorariosCodificados[indexDia] |= Math.pow(2, (valHorario + i));
     }
 

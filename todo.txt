@@ -1,0 +1,17 @@
+Mostra da tabela com turmas disponíveis deve ocorrer tudo de uma vez,
+usar async e esperar tudo chegar antes de jogar na tela.
+
+Ou remover rust, ou mover parte do código pra ele como módulo.
+
+Segmentar código em arquivos diferentes, ta tudo muito misturado.
+
+Achar mecanismo pra fazer remoção de elementos quando estes são reinseridos.
+(dar um id para cada elemento gerado pela extensão, facilitanto remoção mais tarde)
+Remover os while e adicionar esse mecanismo de remocao onde necessario.
+
+Fazer benchmark pra ver onde q fica lento quando pressiona botao, e assim, ver se vale
+a pena rust module.
+
+Talvez implementar o ordenamento das tabelas, mas isso ia requerer alguma listagem 
+mais dinamica das grades em JS.
+

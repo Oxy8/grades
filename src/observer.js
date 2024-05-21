@@ -71,7 +71,7 @@ function insereBotaoMostrarTurmas() {
     cellBotaoSelecionaTurmas.appendChild(paragBotaoSelecionaTurmas);
 }
 
-async function MostraTabelaTurmasDisponiveis() {
+function MostraTabelaTurmasDisponiveis() {
     
     var quantidadeCadeirasSelecionadas = document.getElementById( "AtivEnsinoSelecionadas" ).options.length;
 
@@ -133,6 +133,12 @@ function obtemIdentificadoresAtividades(tabelaSelecaoTurmas) {
     var arrayIdentificadoresAtividades = [];
     
     for (var row of tabelaSelecaoTurmas.rows) {
+
+        // Pula o titulo;
+        if (row === tabelaSelecaoTurmas.rows[0]) {
+            continue;
+        }
+
         let identificador = row.getAttribute("atividade");
 
         if (!arrayIdentificadoresAtividades.includes(identificador)) {
@@ -152,7 +158,7 @@ function removeAtividadesVelhas(tabelaSelecaoTurmas, identificadoresVelhos) {
     
     var linhasTabela = tabelaSelecaoTurmas.rows;
 
-    for (let i = 0; i < linhasTabela.length;) {
+    for (let i = 1; i < linhasTabela.length;) {
         if ( identificadoresVelhos.includes(linhasTabela[i].getAttribute("atividade")) ) {
             tabelaSelecaoTurmas.deleteRow(i);
         } else {
@@ -202,8 +208,6 @@ function insereAtividadesNovas(tabelaSelecaoTurmas, identificadoresNovos) {
 
                     rowCopy.className = "modelo1";
                     rowCopy.setAttribute("atividade", identificador);
-                    
-                    console.log("identificador:", identificador);
 
                     tabelaSelecaoTurmas.appendChild(rowCopy);
                 }
@@ -315,8 +319,3 @@ function InsereBotoesMostraGrades() {
     divAtividades.setAttribute("BotoesGrades", "true");
     */
 }
-
-
-// mostraGrades
-// mostraGradeUnica
-

@@ -1,15 +1,47 @@
 // import { obtemArrayTurmasPorAtividade } from './turmas.js';
 
 // Recebe uma grade, retorna HTMLElement;
-function montaTabelaComGrade(grade) {
+function montaTabelaComGrade(grade, index) {
     var tabela = geraTabelaVazia();
 
     for (var turma of grade) {
         adicionaTurmaTabela(tabela, turma);
     }
 
-    return tabela;
+    tabelaComMoldura = geraMolduraTabela(tabela, index);
+
+    return tabelaComMoldura;
 }
+
+function geraMolduraTabela(tabela, index) {
+    const fieldset = document.createElement('fieldset');
+    fieldset.className = 'moldura';
+    fieldset.style.backgroundColor = 'white';
+  
+    const i = document.createElement('i');
+    fieldset.appendChild(i);
+  
+    const legend = document.createElement('legend');
+    legend.className = 'legend-2';
+    legend.textContent = 'OPÇÃO ' + (index+1);
+    i.appendChild(legend);
+  
+    i.appendChild(document.createElement('br'));
+  
+    const table = document.createElement('table');
+    table.className = 'modelo2';
+    i.appendChild(table);
+  
+    const tbody = document.createElement('tbody');
+    table.appendChild(tbody);
+  
+    
+    tbody.appendChild(tabela);
+
+  
+    return fieldset;
+  }
+  
 
 function geraTabelaVazia() {
 
@@ -17,16 +49,22 @@ function geraTabelaVazia() {
     const tableBody = document.createElement("tbody");
   
     const diasDaSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-    
+    const larguraTd = 30;
+
     const row = document.createElement("tr");
     
     const cell = document.createElement("td");
     row.appendChild(cell);
-    for (let n = 0; n < 6; n++) {
-        const cell = document.createElement("td");
-        cell.innerText = diasDaSemana[n];
-        row.appendChild(cell);
-    }
+
+    // Loop through the array and create a <td> element for each day
+    diasDaSemana.forEach(dia => {
+        let td = document.createElement('td');
+        let numEspacos = (larguraTd - dia.length) - 2;
+        let espacos = '&nbsp;'.repeat(numEspacos);
+        td.innerHTML = `&nbsp;${dia}${espacos}`;
+        row.appendChild(td);
+    });
+
     tableBody.appendChild(row);
 
     for (let m = 0; m < 16; m++) {
@@ -43,10 +81,9 @@ function geraTabelaVazia() {
 
         tableBody.appendChild(row);
     }
-  
+
     table.appendChild(tableBody);
-    table.style.border = "1px";
-    table.style.borderCollapse = "collapse";
+    table.className = 'modelo2';
 
     return table;
 }
@@ -104,6 +141,21 @@ async function mostraGradeUnica() {
 
 async function mostraGrades() {
 
+    conjuntoArraysTurmasSemConflito = await obtemGrades();
+
+    let fragment = new DocumentFragment();
+
+
+
+    conjuntoArraysTurmasSemConflito.forEach((grade, index) => {
+        var tabelaGrade = montaTabelaComGrade(grade, index);
+        fragment.appendChild(tabelaGrade);
+    });
+
+    document.body.appendChild(fragment);
+}
+
+async function obtemGrades() {
     var turmasOrganizadasPorAtividade = await obtemArrayTurmasPorAtividade();
     var quantAtividades = turmasOrganizadasPorAtividade.length;
 
@@ -150,10 +202,7 @@ async function mostraGrades() {
         conjuntoArraysTurmasSemConflito.push(arrayTurmasSemConflito);
     }
 
-    for (var grade of conjuntoArraysTurmasSemConflito) {
-        var tabelaGrade = montaTabelaComGrade(grade);
-        document.body.appendChild(tabelaGrade);
-    }
+    return conjuntoArraysTurmasSemConflito;
 }
 
 // Tenta incrementar índice na posição atual, zerando os restantes.  

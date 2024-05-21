@@ -9,5 +9,9 @@
 	vertical-align: middle;
 }
 
+td:empty::after {
+	content: "\00a0";
+}
+
 
 

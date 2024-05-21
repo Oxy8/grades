@@ -286,9 +286,26 @@ function geraTabelaVazia() {
     const table = document.createElement("table");
     const tableBody = document.createElement("tbody");
   
-    for (let m = 0; m < 16; m++) {
-      const row = document.createElement("tr");
+    const diasDaSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+    
+    const row = document.createElement("tr");
+    
+    const cell = document.createElement("td");
+    row.appendChild(cell);
+    for (let n = 0; n < 6; n++) {
+        const cell = document.createElement("td");
+        cell.innerText = diasDaSemana[n];
+        row.appendChild(cell);
+    }
+    tableBody.appendChild(row);
 
+    for (let m = 0; m < 16; m++) {
+        const row = document.createElement("tr");
+
+        const cell = document.createElement("td");
+        cell.innerText = (m+7)+":30";
+        row.appendChild(cell);
+        
         for (let n = 0; n < 6; n++) {
             const cell = document.createElement("td");
             row.appendChild(cell);
@@ -298,12 +315,13 @@ function geraTabelaVazia() {
     }
   
     table.appendChild(tableBody);
-    table.setAttribute("border", "1");
+    table.style.border = "1px";
+    table.style.borderCollapse = "collapse";
 
     return table;
 }
 
-// <label style="padding: 2px; color:#800000">        </label>
+
 function adicionaTurmaTabela(tabela, arrayTurma) {
     
     var stringTurma = arrayTurma[1];
@@ -320,7 +338,7 @@ function adicionaTurmaTabela(tabela, arrayTurma) {
                 label.style.color = '#800000';
 
                 // preciso considerar cores de
-                // Atividades de Ensino com Turma Programada
+                // "Atividades de Ensino com Turma Programada"
                 // salvar cor na array de turma quando
                 // construindo stringTurma
                 
@@ -328,10 +346,9 @@ function adicionaTurmaTabela(tabela, arrayTurma) {
 
                 var br = document.createElement('br');
 
-                tabela.rows[n].cells[m].appendChild(label);
-                tabela.rows[n].cells[m].appendChild(br);
+                tabela.rows[n+1].cells[m+1].appendChild(label);
+                tabela.rows[n+1].cells[m+1].appendChild(br);
 
-                console.log(tabela.rows[m].cells[n]);
             }
         }
     }
@@ -384,13 +401,10 @@ async function mostraGrades() {
 
             var horarioCodificado = turmasOrganizadasPorAtividade[i][indicesTurmaPorAtividade[i]][2];
 
-
             var conflito = verificaConflitoHorarioCodificado(verificaConflitos, horarioCodificado);
 
             if (conflito) {
                 fim_do_loop = tentaIncrementarIndice(indicesMaximosControle, indicesTurmaPorAtividade, i);
-                // Tenta incrementar índica na posição atual, zerando as restantes.                
-                // Seta indicesTurmaPorAtividade como -1 no caso de se ter esgotado todos indices;
 
                 continue proximo_set;
 
@@ -407,15 +421,13 @@ async function mostraGrades() {
         conjuntoArraysTurmasSemConflito.push(arrayTurmasSemConflito);
     }
 
-    console.log("################");
-    console.log(conjuntoArraysTurmasSemConflito);
-
     for (var grade of conjuntoArraysTurmasSemConflito) {
         var tabelaGrade = montaTabelaComGrade(grade);
         document.body.appendChild(tabelaGrade);
     }
 }
 
+// Tenta incrementar índice na posição atual, zerando os restantes.  
 function tentaIncrementarIndice(indicesMaximosControle, indicesTurmaPorAtividade, indice) {
     if (indice == -1) {
         return true; // retorna erro aqui.
@@ -455,12 +467,6 @@ function verificaConflitoHorarioCodificado(horario1, horario2) {
             return true; // Houve conflito.
         }
     }
-
-    /*
-    console.log("horario1");
-    console.log(horario1);
-    console.log("---");
-    */
 
     return false; // Não houve conflito.
 }

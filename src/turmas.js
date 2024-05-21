@@ -1,4 +1,3 @@
-
 async function obtemArrayTurmasPorAtividade() {
     
     var arrayInfoTurmas = await constroiArrayInfoTurmas();

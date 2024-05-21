@@ -10,9 +10,6 @@ function montaTabelaComGrade(grade) {
 
     return tabela;
 }
-// melhor criar a tabela e depois inserir um por um?
-
-// Como usar i e j para acessar 
 
 function geraTabelaVazia() {
 
@@ -86,7 +83,6 @@ function adicionaTurmaTabela(tabela, arrayTurma) {
         }
     }
 }
-  
 
 
 async function mostraGradeUnica() {
@@ -195,6 +191,7 @@ function verificaConflitoHorarioCodificado(horario1, horario2) {
     for (let j=0; j<horario1.length; j++) {
         
         diaHorario1 = horario1[j]; // Necessario para evitar modificar array original.
+        
         diaHorario1 &= horario2[j];
         if (diaHorario1 != 0) {
             return true; // Houve conflito.
@@ -203,5 +200,3 @@ function verificaConflitoHorarioCodificado(horario1, horario2) {
 
     return false; // Não houve conflito.
 }
-
-//

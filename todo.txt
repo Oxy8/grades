@@ -1,9 +1,28 @@
-Mostra da tabela com turmas disponíveis deve ocorrer tudo de uma vez,
-usar async e esperar tudo chegar antes de jogar na tela.
+Detectar existência de grades em display no html, se existir, remove para a inserção da nova.
+(usar html id)
+
+adicionar cores na array de cada turmas
+(turmas de uma mesma atividade devem ter cores iguais)
+
+Como as cores serão obtidas a partir da relação nome-código original, não há
+a necessidade de ordenar as atividades/turmas, a ordem original das cores virá naturalmente.
 
 
-Talvez implementar o ordenamento das tabelas, mas isso ia requerer alguma listagem 
-mais dinamica das grades em JS.
+
+Adicionar mecanismo para detectar se duas turmas da mesma cadeira possuem o mesmo horário.
+(deve ser fácil devido ao jeito com que eu codifiquei os horarios em Uint16[6], basta ver
+se as duas arrays são iguais) (criar buckets com cada um dos horários da turmas, e se o bucket
+for maior que 1, vamos usar o asterisco).
+Caso tenham o mesmo horário, estas devem ser mostradas como uma só na tabela de grades,
+com um rodapé indicando quais turmas estão sendo representadas de forma unida.
+
+
+
+
+
+
+
+
 
 ----------------------------------
 Código cadeira está sendo usado com dois sentidos:

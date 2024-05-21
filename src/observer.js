@@ -95,7 +95,6 @@ function MostraTabelaTurmasDisponiveis() {
 
         obtemTituloTabelaTurmas().then( function(titulo) {
             tabelaSelecaoTurmas.appendChild(titulo);
-            console.log(tabelaSelecaoTurmas);
         });
 
 

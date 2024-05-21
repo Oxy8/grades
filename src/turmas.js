@@ -117,55 +117,6 @@ function geraStringTurma(relacaoCodigosCadeiras, AtividadeDeEnsino, Turma, Vagas
 }
 
 
-
-
-// Cada vez que for chamada, atualiza uma variável global com a tabela colorida,
-// assim, a tabela pode ser usada para outras coisas sem que um novo POST request seja feito.
-function obtemCodigosCadeirasCores() {
-    return new Promise((resolve) => {  // Tentar mover mais para baixo no corpo da func mais tarde.
-
-        var cadeirasSelecionadas = Array.from(document.getElementById("AtivEnsinoSelecionadas").options);
-        var codigosCadeirasSelecionadas = cadeirasSelecionadas.map(item => {
-            return item.value.split(",")[1].trim();
-        });
-
-        var sGrupoMatricula = $('#GrupoMatricula').val();
-        var iPeriodoLetivo = $('#PeriodoLetivo').val();
-
-        if ((iPeriodoLetivo != '') && (sGrupoMatricula != '')) {
-            var aDados = {
-                GradeUnica: 1,
-                PeriodoLetivo: iPeriodoLetivo,
-                GrupoMatricula: sGrupoMatricula,
-                'Atividades[]': codigosCadeirasSelecionadas
-            };
-
-            $.post('/PortalEnsino/GradeHorarios/index.php?r=grade/montaGrade', aDados, function(responseData) {
-                var arrayCodigosNomesCadeiras = [];
-
-                var tempResponse = document.createElement('div');
-                tempResponse.innerHTML = responseData;
-                var fieldsetCodigosCadeiras = tempResponse.getElementsByTagName("fieldset")[0];
-
-                //=======================//
-                //===== Acaba aqui ======//
-
-                var labelsCodigosCadeiras = fieldsetCodigosCadeiras.getElementsByTagName("label");
-
-                for (var label of labelsCodigosCadeiras) {   
-                    var i = label.textContent.indexOf(' - ');
-                    var splits = [label.textContent.slice(0,i), label.textContent.slice(i+3)];
-                    splits.push(label.style.cor);
-                    arrayCodigosNomesCadeiras.push(splits);
-                }
-
-                resolve(arrayCodigosNomesCadeiras);
-            });
-        }
-    });
-}
-
-
 function createCachedRequestMontaGrade() {
     
     let cache = null;
@@ -188,7 +139,10 @@ function createCachedRequestMontaGrade() {
             'Atividades[]': codigosCadeirasSelecionadas
         };
 
-        if (!cache || aDados !== aDadosAntigo) {
+        if (!cache || JSON.stringify(aDados) !== JSON.stringify(aDadosAntigo)) {
+            
+            console.log("Cache miss");
+
             cache = await requestMontaGrade(aDados);
             aDadosAntigo = aDados;
         }
@@ -196,6 +150,7 @@ function createCachedRequestMontaGrade() {
         return cache;
     };
 }
+
 
 function requestMontaGrade(aDados) {
     return new Promise((resolve) => {

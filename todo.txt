@@ -1,6 +1,3 @@
-Detectar existência de grades em display no html, se existir, remove para a inserção da nova.
-(usar html id)
-
 adicionar cores na array de cada turmas
 (turmas de uma mesma atividade devem ter cores iguais)
 
@@ -15,10 +12,6 @@ se as duas arrays são iguais) (criar buckets com cada um dos horários da turma
 for maior que 1, vamos usar o asterisco).
 Caso tenham o mesmo horário, estas devem ser mostradas como uma só na tabela de grades,
 com um rodapé indicando quais turmas estão sendo representadas de forma unida.
-
-
-
-
 
 
 

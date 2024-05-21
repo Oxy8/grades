@@ -1,7 +1,5 @@
 // import { mostraGrades, mostraGradeUnica } from './grades.js';
 
-//======================================//
-
 var observerDivAtividades = new MutationObserver(
   
     function(records, observer) {
@@ -73,15 +71,8 @@ function insereBotaoMostrarTurmas() {
     cellBotaoSelecionaTurmas.appendChild(paragBotaoSelecionaTurmas);
 }
 
-function MostraTabelaTurmasDisponiveis() {
+async function MostraTabelaTurmasDisponiveis() {
     
-    let tabelaAtividades = divAtividades.getElementsByTagName("table")[0];
-
-    // Remove botões/tabela caso estes ja tenham sido inseridos previamente.
-    while (tabelaAtividades.rows.length > 5) {
-        tabelaAtividades.deleteRow(-1);
-    }
-
     var quantidadeCadeirasSelecionadas = document.getElementById( "AtivEnsinoSelecionadas" ).options.length;
 
     if (quantidadeCadeirasSelecionadas > 30) {
@@ -93,131 +84,187 @@ function MostraTabelaTurmasDisponiveis() {
         return;
     }
 
-    let rowTabelaTurmas = tabelaAtividades.insertRow(5);
-    let cellTabelaTurmas = rowTabelaTurmas.insertCell(0);
-    cellTabelaTurmas.style.width = "100%";
-    cellTabelaTurmas.colSpan = 3;
 
-    var tabelaSelecaoTurmas = ObtemTabelaTurmasDisponiveis();
-    cellTabelaTurmas.appendChild(tabelaSelecaoTurmas);
+    let tabelaAtividades = divAtividades.getElementsByTagName("table")[0];
 
-    InsereBotoesMostraGrades();
+    var tabelaSelecaoTurmas = document.getElementById("TabelaSelecaoTurmas");
+
+    if(!tabelaSelecaoTurmas) { // Se tabelaSelecaoTurmas não existir.
+        var tabelaSelecaoTurmas = document.createElement("table");
+        tabelaSelecaoTurmas.id = "TabelaSelecaoTurmas";
+
+        obtemTituloTabelaTurmas().then( function(titulo) {
+            tabelaSelecaoTurmas.appendChild(titulo);
+            console.log(tabelaSelecaoTurmas);
+        });
+
+
+        let rowTabelaTurmas = tabelaAtividades.insertRow(5);
+        let cellTabelaTurmas = rowTabelaTurmas.insertCell(0);
+        cellTabelaTurmas.style.width = "100%";
+        cellTabelaTurmas.colSpan = 3;
+        cellTabelaTurmas.appendChild(tabelaSelecaoTurmas);
+
+        InsereBotoesMostraGrades();
+    }
+
+    atualizaTabelaTurmasDisponiveis(tabelaSelecaoTurmas);
 
 }
 
-function ObtemTabelaTurmasDisponiveis() {
-    
-    var tabelaSelecaoTurmas = document.createElement("table");
-    tabelaSelecaoTurmas.id = "TabelaSelecaoTurmas";
-
-    //=========================================================================
-    var curriculoSelectVal = document.getElementById( "Curriculo" ).value;
-    const [CodCur, CodHab] = curriculoSelectVal.split("/").map(item => item.trim());
+function atualizaTabelaTurmasDisponiveis(tabelaSelecaoTurmas) {
 
     var cadeirasSelecionadas = Array.from(document.getElementById( "AtivEnsinoSelecionadas" ).options);
-    var codigosCadeirasSelecionadas = cadeirasSelecionadas.map(item => {
+    var identificadoresCadeirasSelecionadas = cadeirasSelecionadas.map(item => {
         return item.value.split(",")[1].trim();
     });
 
-    var Semestre = document.getElementById( "PeriodoLetivo" ).value;
-    //-------------------------------------------------------------------------
+    var identificadoresCadeirasJaInseridas = obtemIdentificadoresAtividades(tabelaSelecaoTurmas);
+    var identificadoresVelhos = subtraiArrays(identificadoresCadeirasJaInseridas, identificadoresCadeirasSelecionadas);
+    var identificadoresNovos = subtraiArrays(identificadoresCadeirasSelecionadas, identificadoresCadeirasJaInseridas);
 
-    for (var CodAtiv of codigosCadeirasSelecionadas) {
-        $.get('/PortalEnsino/GraduacaoAluno/view/HorarioAtividade.php', {
-            CodAtiv: CodAtiv,
-            CodHab: CodHab,
-            CodCur: CodCur,
-            Sem: Semestre
-        }, data => {
+    removeAtividadesVelhas(tabelaSelecaoTurmas, identificadoresVelhos);
 
-            // data contem a tabela com listagem de todas turmas para uma determinada atividade.
-            
-            // Aqui tem que ser feito o tratamento de a cadeira não possuir nenhuma turma disponível.
-            // Senão, tentar acessar rows gera um erro.
+    insereAtividadesNovas(tabelaSelecaoTurmas, identificadoresNovos);
 
-            // O fato de alguma atividade não possuir nenhuma turma faz com que
-            // o aviso informando que existe atividade sem turma selecionada sempre ocorra.
+}
 
-            // Seria interessante ter um aviso diferente nesse caso, evita que fique confuso.
-            
-            var tableElement = pegaTabelaTurma(data);
+function obtemIdentificadoresAtividades(tabelaSelecaoTurmas) {
+    var arrayIdentificadoresAtividades = [];
+    
+    for (var row of tabelaSelecaoTurmas.rows) {
+        let identificador = row.getAttribute("atividade");
 
-            for (var row of tableElement.rows) {
+        if (!arrayIdentificadoresAtividades.includes(identificador)) {
+            arrayIdentificadoresAtividades.push(identificador);
+        }
 
-                var rowCopy = row.cloneNode(true);
-
-                var celulaBotao = rowCopy.insertCell(0);
-                celulaBotao.setAttribute("align", "center");
-                celulaBotao.setAttribute('valign', 'middle');
-                var checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';       
-                celulaBotao.appendChild(checkbox);
-
-                rowCopy.className = "modelo1";
-
-                tabelaSelecaoTurmas.appendChild(rowCopy);
-            }
-        });
     }
 
-    var titulo = obtemTituloTabelaTurmas();
-    tabelaSelecaoTurmas.insertBefore(titulo, tabelaSelecaoTurmas.firstChild);
+    return arrayIdentificadoresAtividades;
+}
+
+function subtraiArrays(array1, array2) {
+    return array1.filter(element => !array2.includes(element));
+}
+
+function removeAtividadesVelhas(tabelaSelecaoTurmas, identificadoresVelhos) {
     
-    return tabelaSelecaoTurmas;
+    var linhasTabela = tabelaSelecaoTurmas.rows;
+
+    for (let i = 0; i < linhasTabela.length;) {
+        if ( identificadoresVelhos.includes(linhasTabela[i].getAttribute("atividade")) ) {
+            tabelaSelecaoTurmas.deleteRow(i);
+        } else {
+            i += 1;
+        }
+    }
+}
+
+function insereAtividadesNovas(tabelaSelecaoTurmas, identificadoresNovos) {
+    
+    var curriculoSelectVal = document.getElementById( "Curriculo" ).value;
+    const [CodCur, CodHab] = curriculoSelectVal.split("/").map(item => item.trim());
+
+    var Semestre = document.getElementById( "PeriodoLetivo" ).value;
+
+    for (var identificador of identificadoresNovos) {
+        (function(identificador) {
+            $.get('/PortalEnsino/GraduacaoAluno/view/HorarioAtividade.php', {
+                CodAtiv: identificador,
+                CodHab: CodHab,
+                CodCur: CodCur,
+                Sem: Semestre
+            }, data => { // Data é um nome super descritivo e preciso... preciso arrumar depois.
+
+                // data contem a tabela com listagem de todas turmas para uma determinada atividade.
+                
+                // Aqui tem que ser feito o tratamento de a cadeira não possuir nenhuma turma disponível.
+                // Senão, tentar acessar rows gera um erro.
+
+                // O fato de alguma atividade não possuir nenhuma turma faz com que
+                // o aviso informando que existe atividade sem turma selecionada sempre ocorra.
+
+                // Seria interessante ter um aviso diferente nesse caso, evita que fique confuso.
+                
+                var tableElement = pegaTabelaTurma(data);
+
+                for (var row of tableElement.rows) {
+
+                    var rowCopy = row.cloneNode(true);
+
+                    var celulaBotao = rowCopy.insertCell(0);
+                    celulaBotao.setAttribute("align", "center");
+                    celulaBotao.setAttribute('valign', 'middle');
+                    var checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';       
+                    celulaBotao.appendChild(checkbox);
+
+                    rowCopy.className = "modelo1";
+                    rowCopy.setAttribute("atividade", identificador);
+                    
+                    console.log("identificador:", identificador);
+
+                    tabelaSelecaoTurmas.appendChild(rowCopy);
+                }
+            });
+        })(identificador);
+    }
 }
 
 function obtemTituloTabelaTurmas() {
-    
-    var newRow = document.createElement("tr");
-    newRow.setAttribute("valign", "middle");
+    return new Promise((resolve) => {
+        var newRow = document.createElement("tr");
+        newRow.setAttribute("valign", "middle");
 
-    var cell0 = document.createElement("td");
-    cell0.className = "th1";
-    cell0.setAttribute("align", "center");
-    cell0.setAttribute("width", "7%");
-    cell0.textContent = "Incluir";
-    newRow.appendChild(cell0);
+        var cell0 = document.createElement("td");
+        cell0.className = "th1";
+        cell0.setAttribute("align", "center");
+        cell0.setAttribute("width", "7%");
+        cell0.textContent = "Incluir";
+        newRow.appendChild(cell0);
 
-    var cell1 = document.createElement("td");
-    cell1.className = "th1";
-    cell1.setAttribute("align", "center");
-    cell1.setAttribute("width", "28%");
-    cell1.textContent = "Atividade de Ensino";
-    newRow.appendChild(cell1);
+        var cell1 = document.createElement("td");
+        cell1.className = "th1";
+        cell1.setAttribute("align", "center");
+        cell1.setAttribute("width", "28%");
+        cell1.textContent = "Atividade de Ensino";
+        newRow.appendChild(cell1);
 
-    var cell2 = document.createElement("td");
-    cell2.className = "th1";
-    cell2.setAttribute("align", "center");
-    cell2.innerHTML = "Carga Horária";
-    newRow.appendChild(cell2);
+        var cell2 = document.createElement("td");
+        cell2.className = "th1";
+        cell2.setAttribute("align", "center");
+        cell2.innerHTML = "Carga Horária";
+        newRow.appendChild(cell2);
 
-    var cell3 = document.createElement("td");
-    cell3.className = "th1";
-    cell3.setAttribute("align", "center");
-    cell3.textContent = "Turma";
-    newRow.appendChild(cell3);
+        var cell3 = document.createElement("td");
+        cell3.className = "th1";
+        cell3.setAttribute("align", "center");
+        cell3.textContent = "Turma";
+        newRow.appendChild(cell3);
 
-    var cell4 = document.createElement("td");
-    cell4.className = "th1";
-    cell4.setAttribute("align", "center");
-    cell4.textContent = "Vagas Oferecidas";
-    newRow.appendChild(cell4);
+        var cell4 = document.createElement("td");
+        cell4.className = "th1";
+        cell4.setAttribute("align", "center");
+        cell4.textContent = "Vagas Oferecidas";
+        newRow.appendChild(cell4);
 
-    var cell5 = document.createElement("td");
-    cell5.className = "th1";
-    cell5.setAttribute("align", "center");
-    cell5.setAttribute("width", "25%");
-    cell5.textContent = "Horário-Período-Local";
-    newRow.appendChild(cell5);
+        var cell5 = document.createElement("td");
+        cell5.className = "th1";
+        cell5.setAttribute("align", "center");
+        cell5.setAttribute("width", "25%");
+        cell5.textContent = "Horário-Período-Local";
+        newRow.appendChild(cell5);
 
-    var cell6 = document.createElement("td");
-    cell6.className = "th1";
-    cell6.setAttribute("align", "center");
-    cell5.setAttribute("width", "33%");
-    cell6.textContent = "Professor(es)";
-    newRow.appendChild(cell6);
+        var cell6 = document.createElement("td");
+        cell6.className = "th1";
+        cell6.setAttribute("align", "center");
+        cell5.setAttribute("width", "33%");
+        cell6.textContent = "Professor(es)";
+        newRow.appendChild(cell6);
 
-    return newRow;
+        resolve(newRow);
+    });
 }
 
 

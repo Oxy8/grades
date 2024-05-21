@@ -1,5 +1,7 @@
 // import { obtemArrayTurmasPorAtividade } from './turmas.js';
 
+const divGrades = document.getElementById("divGrade");
+
 // Recebe uma grade, retorna HTMLElement;
 function montaTabelaComGrade(grade, index) {
     var tabela = geraTabelaVazia();
@@ -136,7 +138,7 @@ async function mostraGradeUnica() {
 
     // Depois pega cada um dos itens e processa em uma tabela, joga essa tabela no fim da página.
     
-
+    divGrades.style.display = "inline";
 }
 
 async function mostraGrades() {
@@ -145,14 +147,33 @@ async function mostraGrades() {
 
     let fragment = new DocumentFragment();
 
-
-
     conjuntoArraysTurmasSemConflito.forEach((grade, index) => {
         var tabelaGrade = montaTabelaComGrade(grade, index);
         fragment.appendChild(tabelaGrade);
     });
 
-    document.body.appendChild(fragment);
+    fragment.appendChild(geraTextoNumeroCronogramas(conjuntoArraysTurmasSemConflito.length));
+
+    divGrades.appendChild(fragment);
+
+    divGrades.style.display = "inline";
+}
+
+function geraTextoNumeroCronogramas(numero) {
+
+    const paragraph = document.createElement('p');
+    paragraph.style.padding = '15px';
+
+    const italicText = document.createElement('i');
+
+    const boldText = document.createElement('b');
+    boldText.textContent = 'FORAM GERADOS ' + numero + ' CRONOGRAMAS';
+
+    italicText.appendChild(boldText);
+
+    paragraph.appendChild(italicText);
+
+    return paragraph;
 }
 
 async function obtemGrades() {

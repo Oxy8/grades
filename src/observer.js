@@ -262,7 +262,7 @@ function obtemTituloTabelaTurmas() {
         var cell6 = document.createElement("td");
         cell6.className = "th1";
         cell6.setAttribute("align", "center");
-        cell5.setAttribute("width", "33%");
+        cell6.setAttribute("width", "25%");
         cell6.textContent = "Professor(es)";
         newRow.appendChild(cell6);
 
@@ -314,7 +314,4 @@ function InsereBotoesMostraGrades() {
     paragBotoesGrades.appendChild(botaoGradeUnica);
     cellBotoesGrades.appendChild(paragBotoesGrades);
 
-    /*
-    divAtividades.setAttribute("BotoesGrades", "true");
-    */
 }

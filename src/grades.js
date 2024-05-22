@@ -42,7 +42,31 @@ function geraMolduraTabela(tabela, index) {
 
   
     return fieldset;
-  }
+}
+
+function geraMolduraTabelaUnica(tabela) {
+    const fieldset = document.createElement('fieldset');
+    fieldset.className = 'moldura';
+    fieldset.style.backgroundColor = 'white';
+  
+    const i = document.createElement('i');
+    fieldset.appendChild(i);
+  
+    i.appendChild(document.createElement('br'));
+  
+    const table = document.createElement('table');
+    table.className = 'modelo2';
+    i.appendChild(table);
+  
+    const tbody = document.createElement('tbody');
+    table.appendChild(tbody);
+  
+    
+    tbody.appendChild(tabela);
+
+  
+    return fieldset;
+}
   
 
 function geraTabelaVazia() {
@@ -58,7 +82,6 @@ function geraTabelaVazia() {
     const cell = document.createElement("td");
     row.appendChild(cell);
 
-    // Loop through the array and create a <td> element for each day
     diasDaSemana.forEach(dia => {
         let td = document.createElement('td');
         let numEspacos = (larguraTd - dia.length) - 2;
@@ -96,7 +119,6 @@ function adicionaTurmaTabela(tabela, arrayTurma) {
     var stringTurma = arrayTurma[1];
     var horarioCodificado = arrayTurma[2];
 
-
     for (let m = 0; m < 6; m++) {
         for (let n = 0; n < 16; n++) {
             var twoPowN = Math.pow(2,n);
@@ -105,11 +127,6 @@ function adicionaTurmaTabela(tabela, arrayTurma) {
                 var label = document.createElement('label');
                 label.style.padding = '2px';
                 label.style.color = arrayTurma[3];
-
-                // preciso considerar cores de
-                // "Atividades de Ensino com Turma Programada"
-                // salvar cor na array de turma quando
-                // construindo stringTurma
                 
                 label.textContent = stringTurma;
 
@@ -126,26 +143,40 @@ function adicionaTurmaTabela(tabela, arrayTurma) {
 
 async function mostraGradeUnica() {
 
-    var arrayInfoTurmas = await obtemArrayTurmasPorAtividade();
+    let fragment = new DocumentFragment();
 
-    // chamada aqui com turmasPorAtividade para enfim, iterar cada uma das
-    // cadeira, e tentar montar tabelas.
+    insereInfoFieldsetsOriginais(fragment);
 
-    // Monta array com todas possíveis combinações que não dão conflito
-    // (2 for loops e um verificador de conflitos no fim pra decidir se add
-    // na array ou não).
-    // (tem que adicionar um limite de tamanho tambem pra nao explodir a memoria)
+    var tabela = geraTabelaVazia();
 
-    // Depois pega cada um dos itens e processa em uma tabela, joga essa tabela no fim da página.
+    var listaTurmas = await constroiArrayInfoTurmas();
+
+    for (var turma of listaTurmas) {
+        adicionaTurmaTabela(tabela, turma);
+    }
+
+    var tabelaComMoldura = geraMolduraTabelaUnica(tabela);
+
+    fragment.appendChild(tabelaComMoldura);
     
-    divGrades.style.display = "inline";
+    if (divGrades.style.display == "inline") { // Se grades ja tiverem sido geradas previamente.
+        while (divGrades.firstChild) {
+            divGrades.removeChild(divGrades.lastChild);
+        }
+    } else {
+        divGrades.style.display = "inline";
+    }
+
+    divGrades.appendChild(fragment);
 }
 
 async function mostraGrades() {
 
-    conjuntoArraysTurmasSemConflito = await obtemGrades();
-
     let fragment = new DocumentFragment();
+
+    insereInfoFieldsetsOriginais(fragment);
+
+    conjuntoArraysTurmasSemConflito = await obtemGrades();
 
     conjuntoArraysTurmasSemConflito.forEach((grade, index) => {
         var tabelaGrade = montaTabelaComGrade(grade, index);
@@ -163,6 +194,25 @@ async function mostraGrades() {
     }
     
     divGrades.appendChild(fragment);
+}
+
+async function insereInfoFieldsetsOriginais(fragment) {
+
+    var responseData = await cachedRequestMontaGrade();
+
+    var tempResponse = document.createElement('div');
+    tempResponse.innerHTML = responseData;
+    var fieldsetCodigosCadeiras = tempResponse.getElementsByTagName("fieldset")[0];
+    var fieldsetInfoTabelas = tempResponse.getElementsByTagName("fieldset")[1];
+    let br1 = document.createElement('br');
+    let br2 = document.createElement('br');
+
+    fragment.appendChild(br1);
+    fragment.appendChild(br2);
+
+    fragment.appendChild(fieldsetCodigosCadeiras);
+    fragment.appendChild(fieldsetInfoTabelas);
+
 }
 
 
@@ -184,6 +234,7 @@ function geraTextoNumeroCronogramas(numero) {
 }
 
 async function obtemGrades() {
+    
     var turmasOrganizadasPorAtividade = await obtemArrayTurmasPorAtividade();
     var quantAtividades = turmasOrganizadasPorAtividade.length;
 
@@ -194,13 +245,11 @@ async function obtemGrades() {
 
     var indicesTurmaPorAtividade = new Array(quantAtividades).fill(0);
 
-    //===================================================================
 
     var conjuntoArraysTurmasSemConflito = [];
 
     var fim_do_loop = false;
     proximo_set: while (fim_do_loop == false) {
-
 
         var arrayTurmasSemConflito = [];
 
@@ -255,7 +304,6 @@ function zeraDoIndiceAoFim(array, indice) {
 }
 
 function uniaoHorariosCodificados(horario1, horario2) {
-
     for (let j=0; j<horario1.length; j++) {
         horario1[j] |= horario2[j];
     }

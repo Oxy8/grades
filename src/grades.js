@@ -51,7 +51,7 @@ function geraTabelaVazia() {
     const tableBody = document.createElement("tbody");
   
     const diasDaSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-    const larguraTd = 30;
+    const larguraTd = 26;
 
     const row = document.createElement("tr");
     
@@ -92,7 +92,7 @@ function geraTabelaVazia() {
 
 
 function adicionaTurmaTabela(tabela, arrayTurma) {
-    
+
     var stringTurma = arrayTurma[1];
     var horarioCodificado = arrayTurma[2];
 
@@ -104,7 +104,7 @@ function adicionaTurmaTabela(tabela, arrayTurma) {
                 
                 var label = document.createElement('label');
                 label.style.padding = '2px';
-                label.style.color = '#800000';
+                label.style.color = arrayTurma[3];
 
                 // preciso considerar cores de
                 // "Atividades de Ensino com Turma Programada"

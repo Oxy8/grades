@@ -32,6 +32,8 @@ async function constroiArrayInfoTurmas() {
 
     var codigosCadeiras = await obtemCodigosCadeiras();
 
+    var tabelaCoresAtividades = await constroiTabelaCores();
+
     for (let i = 1; i < tabelaSelecaoTurmas.rows.length; i++) {
         var celulaCheckbox = tabelaSelecaoTurmas.rows[i].cells[0];
 
@@ -46,11 +48,34 @@ async function constroiArrayInfoTurmas() {
 
             var stringTurma = geraStringTurma(codigosCadeiras, AtividadeDeEnsino, Turma, VagasOferecidas); //==//
 
-            arrayInfoTurmas.push([AtividadeDeEnsino, stringTurma, horarioCodificado]);
+            var Cor = tabelaCoresAtividades[AtividadeDeEnsino]; //==//
+
+            arrayInfoTurmas.push([AtividadeDeEnsino, stringTurma, horarioCodificado, Cor]);
         }
     }
 
     return arrayInfoTurmas;
+}
+
+async function constroiTabelaCores() {
+
+    var responseData = await cachedRequestMontaGrade();
+
+    var tempResponse = document.createElement('div');
+    tempResponse.innerHTML = responseData;
+    var fieldsetCodigosCadeiras = tempResponse.getElementsByTagName("fieldset")[0];
+
+    var labelsCodigosCadeiras = fieldsetCodigosCadeiras.getElementsByTagName("label");
+
+    var mapeamentoCores = {};
+
+    for (var label of labelsCodigosCadeiras) {   
+        var i = label.textContent.indexOf(' - ');
+        var nomeAtividade = label.textContent.slice(i+3);
+        mapeamentoCores[nomeAtividade] = label.style.color;
+    }
+
+    return mapeamentoCores;
 }
 
 function parseHorarioTurma(celulaHorarios) {

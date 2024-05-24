@@ -117,6 +117,8 @@ async function MostraTabelaTurmasDisponiveis() {
             removeBotoesMostraGrades();
         }
 
+        alert("Nenhuma das atividades selecionadas possui turmas disponíveis neste semestre.");
+
     } else {
         tabelaSelecaoTurmas.style.display = "inline-block";
         
@@ -125,18 +127,10 @@ async function MostraTabelaTurmasDisponiveis() {
             insereBotoesMostraGrades();
         }
 
-    }
-
-    console.log("qtdCadeirasSelecionadas");
-    console.log(qtdCadeirasSelecionadas);
-    console.log("qtdCadeirasDisponiveis");
-    console.log(qtdCadeirasDisponiveis);
-    
-
-    if (qtdCadeirasSelecionadas > qtdCadeirasDisponiveis) {
-        alert("Pelo menos uma das atividades selecionadas não tem turmas disponíveis neste semestre.");
-    }
-
+        if (qtdCadeirasSelecionadas > qtdCadeirasDisponiveis) {
+            alert("Pelo menos uma das atividades selecionadas não tem turmas disponíveis neste semestre.");
+        }
+    }    
 }
 
 function removeBotoesMostraGrades() {

@@ -27,7 +27,7 @@ async function obtemArrayTurmasPorAtividade() {
     }
     
     if (qtdCadeirasDisponiveis > qtdCadeirasTurmasSelecionadas) {
-        alert("Existe pelo menos uma atividade com turmas disponíveis que não teve nenhuma turma selecionada. A grade será gerada, mas tenha isso em mente.");
+        alert("Existe pelo menos uma atividade com turmas disponíveis que não teve nenhuma turma selecionada. As grades serão geradas, mas tenha isso em mente.");
     }
 
     return turmasPorAtividade;

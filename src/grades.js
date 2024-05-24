@@ -202,15 +202,19 @@ async function mostraGrades() {
 
     fragment.appendChild(geraTextoNumeroCronogramas(conjuntoArraysTurmasSemConflito.length));
 
+    removeGradesHorarias();
+    divGrades.style.display = "inline";
+    divGrades.appendChild(fragment);
+}
+
+function removeGradesHorarias() {
     if (divGrades.style.display == "inline") { // Se grades ja tiverem sido geradas previamente.
         while (divGrades.firstChild) {
             divGrades.removeChild(divGrades.lastChild);
         }
-    } else {
-        divGrades.style.display = "inline";
     }
-    
-    divGrades.appendChild(fragment);
+
+    divGrades.style.display = "none";
 }
 
 async function insereInfoFieldsetsOriginais(fragment) {

@@ -180,35 +180,29 @@ function insereAtividadesNovas(tabelaSelecaoTurmas, identificadoresNovos) {
                 CodHab: CodHab,
                 CodCur: CodCur,
                 Sem: Semestre
-            }, data => { // Data é um nome super descritivo e preciso... preciso arrumar depois.
-
-                // data contem a tabela com listagem de todas turmas para uma determinada atividade.
+            }, paginaTurmasAtividade => {
                 
-                // Aqui tem que ser feito o tratamento de a cadeira não possuir nenhuma turma disponível.
-                // Senão, tentar acessar rows gera um erro.
+                var tableElement = pegaTabelaTurma(paginaTurmasAtividade);
 
-                // O fato de alguma atividade não possuir nenhuma turma faz com que
-                // o aviso informando que existe atividade sem turma selecionada sempre ocorra.
+                if (tableElement) {
+                    for (var row of tableElement.rows) {
 
-                // Seria interessante ter um aviso diferente nesse caso, evita que fique confuso.
-                
-                var tableElement = pegaTabelaTurma(data);
+                        var rowCopy = row.cloneNode(true);
 
-                for (var row of tableElement.rows) {
+                        var celulaBotao = rowCopy.insertCell(0);
+                        celulaBotao.setAttribute("align", "center");
+                        celulaBotao.setAttribute('valign', 'middle');
+                        var checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';       
+                        celulaBotao.appendChild(checkbox);
 
-                    var rowCopy = row.cloneNode(true);
+                        rowCopy.className = "modelo1";
+                        rowCopy.setAttribute("atividade", identificador);
 
-                    var celulaBotao = rowCopy.insertCell(0);
-                    celulaBotao.setAttribute("align", "center");
-                    celulaBotao.setAttribute('valign', 'middle');
-                    var checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';       
-                    celulaBotao.appendChild(checkbox);
-
-                    rowCopy.className = "modelo1";
-                    rowCopy.setAttribute("atividade", identificador);
-
-                    tabelaSelecaoTurmas.appendChild(rowCopy);
+                        tabelaSelecaoTurmas.appendChild(rowCopy);
+                    }
+                } else {
+                    atividadesSemTurma += 1;
                 }
             });
         })(identificador);

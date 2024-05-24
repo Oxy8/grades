@@ -1,3 +1,5 @@
+var atividadesSemTurma = 0;
+
 async function obtemArrayTurmasPorAtividade() {
     
     var arrayInfoTurmas = await constroiArrayInfoTurmas();
@@ -16,8 +18,8 @@ async function obtemArrayTurmasPorAtividade() {
     }
 
     var tabelaSelecaoTurmas = document.getElementById("AtivEnsinoSelecionadas");
-    if (tabelaSelecaoTurmas.children.length > turmasPorAtividade.length) {
-        alert("Existe pelo menos uma atividade para a qual não foi designada nenhuma turma. A grade será gerada, mas tenha isso em mente.");
+    if (tabelaSelecaoTurmas.children.length > (turmasPorAtividade.length + atividadesSemTurma)) {
+        alert("Existe pelo menos uma atividade com turmas disponíveis para a qual não foi designada nenhuma turma. A grade será gerada, mas tenha isso em mente.");
     }
 
     return turmasPorAtividade;

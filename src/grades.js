@@ -3,14 +3,29 @@
 const divGrades = document.getElementById("divGrade");
 
 // Recebe uma grade, retorna HTMLElement;
+
+//=========================================//
+// Precisa ser adaptada para receber par grade e turmas mesmo horario!
+//=========================================//
 function montaTabelaComGrade(grade, index) {
+    
     var tabela = geraTabelaVazia();
+
+    // grade = gradeEConflitos[0];
+
 
     for (var turma of grade) {
         adicionaTurmaTabela(tabela, turma);
     }
 
+    // turmasMesmoHorario = gradeETurmasMesmoHorario[0];
+    // tabelaTurmasMesmoHorario = geraTabelaTurmasMesmoHorario(turmasMesmoHorario);
+
+
     tabelaComMoldura = geraMolduraTabela(tabela, index);
+    // tabelaComMoldura = geraMolduraTabela(tabela, tabelaTurmasMesmoHorario, index); ou
+    // tabelaComMoldura = geraMolduraTabelaGrade(tabela, tabelaTurmasMesmoHorario, index);
+    // (tem q melhorar os nomes, tabela e grade ta confuso qq é oq)
 
     return tabelaComMoldura;
 }
@@ -145,7 +160,7 @@ async function mostraGradeUnica() {
 
     let fragment = new DocumentFragment();
 
-    insereInfoFieldsetsOriginais(fragment);
+    await insereInfoFieldsetsOriginais(fragment);
 
     var tabela = geraTabelaVazia();
 
@@ -174,9 +189,11 @@ async function mostraGrades() {
 
     let fragment = new DocumentFragment();
 
-    insereInfoFieldsetsOriginais(fragment);
+    await insereInfoFieldsetsOriginais(fragment);
 
-    conjuntoArraysTurmasSemConflito = await obtemGrades();
+    var turmasMesmoHorario = [];
+
+    var conjuntoArraysTurmasSemConflito = await obtemGrades();
 
     conjuntoArraysTurmasSemConflito.forEach((grade, index) => {
         var tabelaGrade = montaTabelaComGrade(grade, index);

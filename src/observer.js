@@ -118,13 +118,13 @@ async function MostraTabelaTurmasDisponiveis() {
         }
 
     } else {
-        tabelaSelecaoTurmas.style.display = "inline";
+        tabelaSelecaoTurmas.style.display = "inline-block";
         
         var rowBotoesMostraGrades = document.getElementById("rowBotoesMostraGrades");
         if (!rowBotoesMostraGrades) {
             insereBotoesMostraGrades();
         }
-        
+
     }
 
     console.log("qtdCadeirasSelecionadas");
@@ -157,11 +157,11 @@ async function atualizaTabelaTurmasDisponiveis(tabelaSelecaoTurmas) {
         var identificadoresVelhos = subtraiArrays(identificadoresCadeirasJaInseridas, identificadoresCadeirasSelecionadas);
         var identificadoresNovos = subtraiArrays(identificadoresCadeirasSelecionadas, identificadoresCadeirasJaInseridas);
 
-        removeAtividadesVelhas(tabelaSelecaoTurmas, identificadoresVelhos);
+        await removeAtividadesVelhas(tabelaSelecaoTurmas, identificadoresVelhos);
 
         await insereAtividadesNovas(tabelaSelecaoTurmas, identificadoresNovos);
 
-        resolve(tabelaSelecaoTurmas);
+        resolve();
     });
 }
 
@@ -192,35 +192,65 @@ function subtraiArrays(array1, array2) {
 
 function removeAtividadesVelhas(tabelaSelecaoTurmas, identificadoresVelhos) {
     
-    var linhasTabela = tabelaSelecaoTurmas.rows;
+    return new Promise(async (resolve) => {
+        var linhasTabela = tabelaSelecaoTurmas.rows;
 
-    for (let i = 1; i < linhasTabela.length;) {
-        if ( identificadoresVelhos.includes(linhasTabela[i].getAttribute("atividade")) ) {
-            tabelaSelecaoTurmas.deleteRow(i);
-        } else {
-            i += 1;
+        for (let i = 1; i < linhasTabela.length;) {
+            if ( identificadoresVelhos.includes(linhasTabela[i].getAttribute("atividade")) ) {
+                tabelaSelecaoTurmas.deleteRow(i);
+            } else {
+                i += 1;
+            }
         }
-    }
+
+        resolve();
+    });
+
 }
+
+//  Eu não sei muito bem o que se passa nessa função aqui.
+// eu preciso aguardar todas as promises, coletar em um fragment, e no final da função
+// inserir o fragment na tabela.
+
+// Preciso garantir que seja inserido em ordem, outras partes do programa dependem disso,
+// e depender dos requests chegarem na ordem não é legal.
+
+// Tentando resolver com fragments...
+// É uma merda, n sei qq acontece internamente pra saber se minha estrategia com fragments
+// faz algum sentido.
+
 
 async function insereAtividadesNovas(tabelaSelecaoTurmas, identificadoresNovos) {
     var curriculoSelectVal = document.getElementById("Curriculo").value;
     const [CodCur, CodHab] = curriculoSelectVal.split("/").map(item => item.trim());
     var Semestre = document.getElementById("PeriodoLetivo").value;
 
-    let atividadesSemTurma = 0;
+    let fragmentGeral = new DocumentFragment();
+
+    // Usar map é meio tosco, porque a array que ele produz não é usada.
+    // No futuro, tentar implementar um foreach com index.
+    // e usa o index pra fazer inserção na array final.
+    // então pega essa array final e insere.
+    // não precisa usar todos os index, é só fazer a inserção de modo que ela fica ordenada,
+    // então se a atividade não tiver turmas não tem problema, é só não inserir nada.
+    
+    // seria interessante ir inserindo na própria tabela, mas ai n tem como fazer o batch. 
+    // (eu acho q seria interessante né...)
 
     const requests = identificadoresNovos.map(identificador => {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             $.get('/PortalEnsino/GraduacaoAluno/view/HorarioAtividade.php', {
                 CodAtiv: identificador,
                 CodHab: CodHab,
                 CodCur: CodCur,
                 Sem: Semestre
             }, paginaTurmasAtividade => {
-                var tableElement = pegaTabelaTurma(paginaTurmasAtividade);
+                var tableElement = pegaTabelaTurma(paginaTurmasAtividade); // corrigir para pegaTabelaTurmas (plural)
 
                 if (tableElement) {
+
+                    let fragmentCadeira = new DocumentFragment();
+
                     for (var row of tableElement.rows) {
                         var rowCopy = row.cloneNode(true);
 
@@ -234,17 +264,19 @@ async function insereAtividadesNovas(tabelaSelecaoTurmas, identificadoresNovos) 
                         rowCopy.className = "modelo1";
                         rowCopy.setAttribute("atividade", identificador);
 
-                        tabelaSelecaoTurmas.appendChild(rowCopy);
+                        fragmentCadeira.appendChild(rowCopy);
                     }
-                } else {
-                    atividadesSemTurma += 1;
+
+                    fragmentGeral.appendChild(fragmentCadeira);
                 }
                 resolve();
-            }).fail(reject);
+            });
         });
     });
 
     await Promise.all(requests);
+
+    tabelaSelecaoTurmas.appendChild(fragmentGeral);
 
     return tabelaSelecaoTurmas;
 }

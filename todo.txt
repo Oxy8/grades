@@ -7,22 +7,7 @@ Caso tenham o mesmo horário, estas devem ser mostradas como uma só na tabela d
 com um rodapé indicando quais turmas estão sendo representadas de forma unida.
 
 
-//===============
-Adicionar casos mais especificos para o alert() de atividades sem cadeiras.
 
-
-//===============
-Quando não é selecionada nenhuma turma, acontecimentos muito estranhos acontecem.
-tem que existir verificação para que pelo menos 1 turma seja selecionada.
-
-Se nenhuma das cadeiras escolhidas possuem turmas, verifica por isso e evita mostrar
-tabela turmas assim como botoes de gerar grades
-
-
-
-//===============
-Se possível, remover          var atividadesSemTurma = 0;
-como variavel global, nao quero vars globais.
 
 
 //===============
@@ -46,5 +31,11 @@ tabela a ser inserida no caso de turmas repetidas:
 Remover dependencia de jquery, ele ja está presente na página originalmente, mas requisitar o uso
 de funções da página original de dentro da extensão pode vir a ser problematico.
 Além de ser problematico, requer diferentes implementações a depender de se no chrome ou no firefox.
+
+(por implementações, eu me refiro à implementação da extensão mesmo, que requer métodos diferentes
+a depender do navegador para permitir a chamada de funções da página original de dentro da função e vice-versa).
+
+(isso aqui pode não ser 100% verdade, mas é o meu entender por trás dos problemas de identificação
+do jquery por parte do firefox).
 
 

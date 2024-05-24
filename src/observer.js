@@ -71,15 +71,15 @@ function insereBotaoMostrarTurmas() {
     cellBotaoSelecionaTurmas.appendChild(paragBotaoSelecionaTurmas);
 }
 
-function MostraTabelaTurmasDisponiveis() {
+async function MostraTabelaTurmasDisponiveis() {
     
-    var quantidadeCadeirasSelecionadas = document.getElementById( "AtivEnsinoSelecionadas" ).options.length;
+    var qtdCadeirasSelecionadas = document.getElementById( "AtivEnsinoSelecionadas" ).options.length;
 
-    if (quantidadeCadeirasSelecionadas > 30) {
+    if (qtdCadeirasSelecionadas > 30) {
         alert("Você pode selecionar no máximo 30 Atividades de Ensino");
         return;
     }
-    else if (quantidadeCadeirasSelecionadas == 0) {
+    else if (qtdCadeirasSelecionadas == 0) {
         alert("Você deve selecionar no mínimo uma Atividade de Ensino");
         return;
     }
@@ -93,10 +93,8 @@ function MostraTabelaTurmasDisponiveis() {
         var tabelaSelecaoTurmas = document.createElement("table");
         tabelaSelecaoTurmas.id = "TabelaSelecaoTurmas";
 
-        obtemTituloTabelaTurmas().then( function(titulo) {
-            tabelaSelecaoTurmas.appendChild(titulo);
-        });
-
+        var titulo = await obtemTituloTabelaTurmas();
+        tabelaSelecaoTurmas.appendChild(titulo);
 
         let rowTabelaTurmas = tabelaAtividades.insertRow(5);
         let cellTabelaTurmas = rowTabelaTurmas.insertCell(0);
@@ -104,28 +102,67 @@ function MostraTabelaTurmasDisponiveis() {
         cellTabelaTurmas.colSpan = 3;
         cellTabelaTurmas.appendChild(tabelaSelecaoTurmas);
 
-        InsereBotoesMostraGrades();
+        insereBotoesMostraGrades();
     }
 
-    atualizaTabelaTurmasDisponiveis(tabelaSelecaoTurmas);
+    await atualizaTabelaTurmasDisponiveis(tabelaSelecaoTurmas);
+    
+    var qtdCadeirasDisponiveis = obtemQuantidadeCadeirasDisponiveis();
+
+    if (qtdCadeirasDisponiveis == 0) {
+        tabelaSelecaoTurmas.style.display = "none";
+        
+        var rowBotoesMostraGrades = document.getElementById("rowBotoesMostraGrades");
+        if (rowBotoesMostraGrades) {
+            removeBotoesMostraGrades();
+        }
+
+    } else {
+        tabelaSelecaoTurmas.style.display = "inline";
+        
+        var rowBotoesMostraGrades = document.getElementById("rowBotoesMostraGrades");
+        if (!rowBotoesMostraGrades) {
+            insereBotoesMostraGrades();
+        }
+        
+    }
+
+    console.log("qtdCadeirasSelecionadas");
+    console.log(qtdCadeirasSelecionadas);
+    console.log("qtdCadeirasDisponiveis");
+    console.log(qtdCadeirasDisponiveis);
+    
+
+    if (qtdCadeirasSelecionadas > qtdCadeirasDisponiveis) {
+        alert("Pelo menos uma das atividades selecionadas não tem turmas disponíveis neste semestre.");
+    }
 
 }
 
-function atualizaTabelaTurmasDisponiveis(tabelaSelecaoTurmas) {
+function removeBotoesMostraGrades() {
+    
+    var rowBotoesMostraGrades = document.getElementById("rowBotoesMostraGrades");
+    rowBotoesMostraGrades.remove();
+}
 
-    var cadeirasSelecionadas = Array.from(document.getElementById( "AtivEnsinoSelecionadas" ).options);
-    var identificadoresCadeirasSelecionadas = cadeirasSelecionadas.map(item => {
-        return item.value.split(",")[1].trim();
+async function atualizaTabelaTurmasDisponiveis(tabelaSelecaoTurmas) {
+    return new Promise(async (resolve) => {
+
+        var cadeirasSelecionadas = Array.from(document.getElementById( "AtivEnsinoSelecionadas" ).options);
+        var identificadoresCadeirasSelecionadas = cadeirasSelecionadas.map(item => {
+            return item.value.split(",")[1].trim();
+        });
+
+        var identificadoresCadeirasJaInseridas = obtemIdentificadoresAtividades(tabelaSelecaoTurmas);
+        var identificadoresVelhos = subtraiArrays(identificadoresCadeirasJaInseridas, identificadoresCadeirasSelecionadas);
+        var identificadoresNovos = subtraiArrays(identificadoresCadeirasSelecionadas, identificadoresCadeirasJaInseridas);
+
+        removeAtividadesVelhas(tabelaSelecaoTurmas, identificadoresVelhos);
+
+        await insereAtividadesNovas(tabelaSelecaoTurmas, identificadoresNovos);
+
+        resolve(tabelaSelecaoTurmas);
     });
-
-    var identificadoresCadeirasJaInseridas = obtemIdentificadoresAtividades(tabelaSelecaoTurmas);
-    var identificadoresVelhos = subtraiArrays(identificadoresCadeirasJaInseridas, identificadoresCadeirasSelecionadas);
-    var identificadoresNovos = subtraiArrays(identificadoresCadeirasSelecionadas, identificadoresCadeirasJaInseridas);
-
-    removeAtividadesVelhas(tabelaSelecaoTurmas, identificadoresVelhos);
-
-    insereAtividadesNovas(tabelaSelecaoTurmas, identificadoresNovos);
-
 }
 
 function obtemIdentificadoresAtividades(tabelaSelecaoTurmas) {
@@ -166,34 +203,32 @@ function removeAtividadesVelhas(tabelaSelecaoTurmas, identificadoresVelhos) {
     }
 }
 
-function insereAtividadesNovas(tabelaSelecaoTurmas, identificadoresNovos) {
-    
-    var curriculoSelectVal = document.getElementById( "Curriculo" ).value;
+async function insereAtividadesNovas(tabelaSelecaoTurmas, identificadoresNovos) {
+    var curriculoSelectVal = document.getElementById("Curriculo").value;
     const [CodCur, CodHab] = curriculoSelectVal.split("/").map(item => item.trim());
+    var Semestre = document.getElementById("PeriodoLetivo").value;
 
-    var Semestre = document.getElementById( "PeriodoLetivo" ).value;
+    let atividadesSemTurma = 0;
 
-    for (var identificador of identificadoresNovos) {
-        (function(identificador) {
+    const requests = identificadoresNovos.map(identificador => {
+        return new Promise((resolve, reject) => {
             $.get('/PortalEnsino/GraduacaoAluno/view/HorarioAtividade.php', {
                 CodAtiv: identificador,
                 CodHab: CodHab,
                 CodCur: CodCur,
                 Sem: Semestre
             }, paginaTurmasAtividade => {
-                
                 var tableElement = pegaTabelaTurma(paginaTurmasAtividade);
 
                 if (tableElement) {
                     for (var row of tableElement.rows) {
-
                         var rowCopy = row.cloneNode(true);
 
                         var celulaBotao = rowCopy.insertCell(0);
                         celulaBotao.setAttribute("align", "center");
                         celulaBotao.setAttribute('valign', 'middle');
                         var checkbox = document.createElement('input');
-                        checkbox.type = 'checkbox';       
+                        checkbox.type = 'checkbox';
                         celulaBotao.appendChild(checkbox);
 
                         rowCopy.className = "modelo1";
@@ -204,9 +239,14 @@ function insereAtividadesNovas(tabelaSelecaoTurmas, identificadoresNovos) {
                 } else {
                     atividadesSemTurma += 1;
                 }
-            });
-        })(identificador);
-    }
+                resolve();
+            }).fail(reject);
+        });
+    });
+
+    await Promise.all(requests);
+
+    return tabelaSelecaoTurmas;
 }
 
 function obtemTituloTabelaTurmas() {
@@ -279,11 +319,12 @@ function pegaTabelaTurma(htmlString) {
 }
 
 
-function InsereBotoesMostraGrades() {
+function insereBotoesMostraGrades() {
 
     let tabela = divAtividades.getElementsByTagName("table")[0];
 
     let rowBotoesMostraGrades = tabela.insertRow(6);
+    rowBotoesMostraGrades.id = "rowBotoesMostraGrades";
     let cellBotoesGrades = rowBotoesMostraGrades.insertCell(0);
     cellBotoesGrades.colSpan = 3;
 
@@ -304,6 +345,7 @@ function InsereBotoesMostraGrades() {
     const paragBotoesGrades = document.createElement('p');
     paragBotoesGrades.setAttribute('style', 'padding: 20px;');
     paragBotoesGrades.className = "paragBotoes";
+    paragBotoesGrades.id = "botoesGrades";
     paragBotoesGrades.appendChild(botaoGrades);
     paragBotoesGrades.appendChild(botaoGradeUnica);
     cellBotoesGrades.appendChild(paragBotoesGrades);

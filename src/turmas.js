@@ -1,5 +1,6 @@
-var atividadesSemTurma = 0;
 
+// Melhorar nome dessas funções, algo tipo:
+// organizaTurmasSelecionadasPorAtividade()
 async function obtemArrayTurmasPorAtividade() {
     
     var arrayInfoTurmas = await constroiArrayInfoTurmas();
@@ -17,12 +18,41 @@ async function obtemArrayTurmasPorAtividade() {
         }
     }
 
-    var tabelaSelecaoTurmas = document.getElementById("AtivEnsinoSelecionadas");
-    if (tabelaSelecaoTurmas.children.length > (turmasPorAtividade.length + atividadesSemTurma)) {
-        alert("Existe pelo menos uma atividade com turmas disponíveis para a qual não foi designada nenhuma turma. A grade será gerada, mas tenha isso em mente.");
+    var qtdCadeirasSelecionadas = document.getElementById("AtivEnsinoSelecionadas").children.length;
+    var qtdCadeirasDisponiveis = obtemQuantidadeCadeirasDisponiveis();
+    var qtdCadeirasTurmasSelecionadas = turmasPorAtividade.length;
+    
+    if (qtdCadeirasSelecionadas > qtdCadeirasDisponiveis) {
+        alert("Pelo menos uma das atividades selecionadas não tem turmas disponíveis neste semestre.");
+    }
+    
+    if (qtdCadeirasDisponiveis > qtdCadeirasTurmasSelecionadas) {
+        alert("Existe pelo menos uma atividade com turmas disponíveis que não teve nenhuma turma selecionada. A grade será gerada, mas tenha isso em mente.");
     }
 
     return turmasPorAtividade;
+}
+
+function obtemQuantidadeCadeirasDisponiveis() {
+
+    var tabelaSelecaoTurmas = document.getElementById("TabelaSelecaoTurmas");
+
+    var listaAtividadesDeEnsino = []
+
+    for (let i = 1; i < tabelaSelecaoTurmas.rows.length; i++) {
+        var celulaCheckbox = tabelaSelecaoTurmas.rows[i].cells[0];
+
+        var listaLength = listaAtividadesDeEnsino.length
+
+        var AtividadeDeEnsino = tabelaSelecaoTurmas.rows[i].cells[1].textContent.trim();
+
+        if (listaLength == 0 || AtividadeDeEnsino != listaAtividadesDeEnsino[listaLength - 1]) {
+            listaAtividadesDeEnsino.push(AtividadeDeEnsino);
+        }
+    
+    }
+
+    return listaAtividadesDeEnsino.length;
 }
 
 

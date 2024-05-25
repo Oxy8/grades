@@ -21,13 +21,13 @@ var observerDivAtividades = new MutationObserver(
             // removeBotaoMostrarTurmas();
             // /\ inútil, mas deixa aqui caso a estrutura mude.
 
-            console.log("Removed:" + totalRemoved)
+            //console.log("Removed:" + totalRemoved)
         } 
 
         if (totalAdded == 5) {
             removeBotoesOriginais();
             insereBotaoMostrarTurmas();
-            console.log("Added:" + totalAdded)
+            //console.log("Added:" + totalAdded)
         }
     }
 )
@@ -224,80 +224,6 @@ function removeAtividadesVelhas(tabelaSelecaoTurmas, identificadoresVelhos) {
 
 }
 
-//  Eu não sei muito bem o que se passa nessa função aqui.
-// eu preciso aguardar todas as promises, coletar em um fragment, e no final da função
-// inserir o fragment na tabela.
-
-// Preciso garantir que seja inserido em ordem, outras partes do programa dependem disso,
-// e depender dos requests chegarem na ordem não é legal.
-
-// Tentando resolver com fragments...
-// É uma merda, n sei qq acontece internamente pra saber se minha estrategia com fragments
-// faz algum sentido.
-
-/* 
-async function insereAtividadesNovas(tabelaSelecaoTurmas, identificadoresNovos) {
-    var curriculoSelectVal = document.getElementById("Curriculo").value;
-    const [CodCur, CodHab] = curriculoSelectVal.split("/").map(item => item.trim());
-    var Semestre = document.getElementById("PeriodoLetivo").value;
-
-    let fragmentGeral = new DocumentFragment();
-
-    // Usar map é meio tosco, porque a array que ele produz não é usada.
-    // No futuro, tentar implementar um foreach com index.
-    // e usa o index pra fazer inserção na array final.
-    // então pega essa array final e insere.
-    // não precisa usar todos os index, é só fazer a inserção de modo que ela fica ordenada,
-    // então se a atividade não tiver turmas não tem problema, é só não inserir nada.
-    
-    // seria interessante ir inserindo na própria tabela, mas ai n tem como fazer o batch. 
-    // (eu acho q seria interessante né...)
-
-    const requests = identificadoresNovos.map(identificador => {
-        return new Promise((resolve) => {
-            $.get('/PortalEnsino/GraduacaoAluno/view/HorarioAtividade.php', {
-                CodAtiv: identificador,
-                CodHab: CodHab,
-                CodCur: CodCur,
-                Sem: Semestre
-            }, paginaTurmasAtividade => {
-                var tableElement = pegaTabelaTurma(paginaTurmasAtividade); // corrigir para pegaTabelaTurmas (plural)
-
-                if (tableElement) {
-
-                    let fragmentCadeira = new DocumentFragment();
-
-                    for (var row of tableElement.rows) {
-                        var rowCopy = row.cloneNode(true);
-
-                        var celulaBotao = rowCopy.insertCell(0);
-                        celulaBotao.setAttribute("align", "center");
-                        celulaBotao.setAttribute('valign', 'middle');
-                        var checkbox = document.createElement('input');
-                        checkbox.type = 'checkbox';
-                        celulaBotao.appendChild(checkbox);
-
-                        rowCopy.className = "modelo1";
-                        rowCopy.setAttribute("atividade", identificador);
-
-                        fragmentCadeira.appendChild(rowCopy);
-                    }
-
-                    fragmentGeral.appendChild(fragmentCadeira);
-                }
-                resolve();
-            });
-        });
-    });
-
-    await Promise.all(requests);
-
-    tabelaSelecaoTurmas.appendChild(fragmentGeral);
-
-    return tabelaSelecaoTurmas;
-}
-*/
-
 
 async function insereAtividadesNovas(tabelaSelecaoTurmas, identificadoresNovos) {
     var curriculoSelectVal = document.getElementById("Curriculo").value;
@@ -315,7 +241,7 @@ async function insereAtividadesNovas(tabelaSelecaoTurmas, identificadoresNovos) 
                 return text;
             })
             .then(paginaTurmasAtividade => {
-                var tableElement = pegaTabelaTurma(paginaTurmasAtividade); // corrigir para pegaTabelaTurmas (plural)
+                var tableElement = pegaTabelaTurmas(paginaTurmasAtividade);
 
                 if (tableElement) {
                     let fragmentCadeira = new DocumentFragment();
@@ -405,7 +331,7 @@ function obtemTituloTabelaTurmas() {
 }
 
 
-function pegaTabelaTurma(htmlString) {
+function pegaTabelaTurmas(htmlString) {
     var div = document.createElement('div');
     div.innerHTML = htmlString.trim();
   

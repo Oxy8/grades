@@ -1,7 +1,5 @@
 
-// Melhorar nome dessas funções, algo tipo:
-// organizaTurmasSelecionadasPorAtividade()
-async function obtemArrayTurmasPorAtividade() {
+async function organizaTurmasSelecionadasPorAtividade() {
     
     var arrayInfoTurmas = await constroiArrayInfoTurmas();
 
@@ -118,7 +116,6 @@ function parseHorarioTurma(celulaHorarios) {
                 
         var toBeParsed = child.innerHTML.split("<br>", 1)[0];
 
-        
         const toBeParsedSplit = toBeParsed.trim().split(" ");
         // tem que considerar que alem de "Quinta 13:30 - 15:10 (2)",
         // tambem podem aparecer no formato "N.I.".
@@ -173,7 +170,6 @@ function geraStringTurma(relacaoCodigosCadeiras, AtividadeDeEnsino, Turma, Vagas
     }
 }
 
-
 function createCachedRequestMontaGrade() {
     
     let cache = null;
@@ -199,8 +195,6 @@ function createCachedRequestMontaGrade() {
         // aDados não precisa existir, eu posso montar estrutura final direto.
 
         if (!cache || JSON.stringify(aDados) !== JSON.stringify(aDadosAntigo)) {
-            
-            console.log("Cache miss");
 
             cache = await requestMontaGrade(aDados);
 
@@ -210,7 +204,6 @@ function createCachedRequestMontaGrade() {
         return cache;
     };
 }
-
 
 function requestMontaGrade(aDados) {
     

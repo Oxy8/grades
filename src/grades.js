@@ -1,4 +1,3 @@
-// import { obtemArrayTurmasPorAtividade } from './turmas.js';
 
 const divGrades = document.getElementById("divGrade");
 
@@ -256,7 +255,7 @@ function geraTextoNumeroCronogramas(numero) {
 
 async function obtemGrades() {
     
-    var turmasOrganizadasPorAtividade = await obtemArrayTurmasPorAtividade();
+    var turmasOrganizadasPorAtividade = await organizaTurmasSelecionadasPorAtividade();
     var quantAtividades = turmasOrganizadasPorAtividade.length;
 
     const indicesMaximosControle = new Array(quantAtividades).fill(0);
@@ -265,7 +264,6 @@ async function obtemGrades() {
     }
 
     var indicesTurmaPorAtividade = new Array(quantAtividades).fill(0);
-
 
     var conjuntoArraysTurmasSemConflito = [];
 
@@ -303,7 +301,6 @@ async function obtemGrades() {
     return conjuntoArraysTurmasSemConflito;
 }
 
-// Tenta incrementar índice na posição atual, zerando os restantes.  
 function tentaIncrementarIndice(indicesMaximosControle, indicesTurmaPorAtividade, indice) {
     if (indice == -1) {
         return true; // retorna erro aqui.

@@ -186,8 +186,8 @@ function createCachedRequestMontaGrade() {
             return item.value.split(",")[1].trim();
         });
 
-        var sGrupoMatricula = $('#GrupoMatricula').val();
-        var iPeriodoLetivo = $('#PeriodoLetivo').val();
+        var sGrupoMatricula = document.getElementById("GrupoMatricula").value
+        var iPeriodoLetivo = document.getElementById("PeriodoLetivo").value
 
         const aDados = {
             GradeUnica: 1,
@@ -196,11 +196,14 @@ function createCachedRequestMontaGrade() {
             'Atividades[]': codigosCadeirasSelecionadas
         };
 
+        // aDados não precisa existir, eu posso montar estrutura final direto.
+
         if (!cache || JSON.stringify(aDados) !== JSON.stringify(aDadosAntigo)) {
             
             console.log("Cache miss");
 
             cache = await requestMontaGrade(aDados);
+
             aDadosAntigo = aDados;
         }
         
@@ -210,12 +213,34 @@ function createCachedRequestMontaGrade() {
 
 
 function requestMontaGrade(aDados) {
-    return new Promise((resolve) => {
-	$.post('/PortalEnsino/GradeHorarios/index.php?r=grade/montaGrade', aDados, function(responseData) {
-            resolve(responseData);
-        });
+    
+    let atividades = aDados['Atividades[]'];
+
+    let data = new URLSearchParams();
+
+    data.append("GradeUnica", 1);
+    data.append("PeriodoLetivo", aDados["PeriodoLetivo"]);
+    data.append("GrupoMatricula", aDados["GrupoMatricula"]);
+
+    for (var atividade of atividades) {
+        data.append('Atividades[]', atividade);
+    }
+
+    return fetch("/PortalEnsino/GradeHorarios/index.php?r=grade/montaGrade", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: data
+    })
+    .then(response => response.arrayBuffer())
+    .then(buffer => {
+        let decoder = new TextDecoder("iso-8859-1");
+        let text = decoder.decode(buffer);
+        return text;
     });
 }
+
 
 const cachedRequestMontaGrade = createCachedRequestMontaGrade();
 

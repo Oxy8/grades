@@ -235,7 +235,7 @@ function removeAtividadesVelhas(tabelaSelecaoTurmas, identificadoresVelhos) {
 // É uma merda, n sei qq acontece internamente pra saber se minha estrategia com fragments
 // faz algum sentido.
 
-
+/* 
 async function insereAtividadesNovas(tabelaSelecaoTurmas, identificadoresNovos) {
     var curriculoSelectVal = document.getElementById("Curriculo").value;
     const [CodCur, CodHab] = curriculoSelectVal.split("/").map(item => item.trim());
@@ -296,6 +296,58 @@ async function insereAtividadesNovas(tabelaSelecaoTurmas, identificadoresNovos) 
 
     return tabelaSelecaoTurmas;
 }
+*/
+
+
+async function insereAtividadesNovas(tabelaSelecaoTurmas, identificadoresNovos) {
+    var curriculoSelectVal = document.getElementById("Curriculo").value;
+    const [CodCur, CodHab] = curriculoSelectVal.split("/").map(item => item.trim());
+    var Semestre = document.getElementById("PeriodoLetivo").value;
+
+    let fragmentGeral = new DocumentFragment();
+
+    const requests = identificadoresNovos.map(identificador => {
+        return fetch(`/PortalEnsino/GraduacaoAluno/view/HorarioAtividade.php?CodAtiv=${identificador}&CodHab=${CodHab}&CodCur=${CodCur}&Sem=${Semestre}`)
+            .then(response => response.arrayBuffer())
+            .then(buffer => {
+                let decoder = new TextDecoder("iso-8859-1");
+                let text = decoder.decode(buffer);
+                return text;
+            })
+            .then(paginaTurmasAtividade => {
+                var tableElement = pegaTabelaTurma(paginaTurmasAtividade); // corrigir para pegaTabelaTurmas (plural)
+
+                if (tableElement) {
+                    let fragmentCadeira = new DocumentFragment();
+
+                    for (var row of tableElement.rows) {
+                        var rowCopy = row.cloneNode(true);
+
+                        var celulaBotao = rowCopy.insertCell(0);
+                        celulaBotao.setAttribute("align", "center");
+                        celulaBotao.setAttribute('valign', 'middle');
+                        var checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        celulaBotao.appendChild(checkbox);
+
+                        rowCopy.className = "modelo1";
+                        rowCopy.setAttribute("atividade", identificador);
+
+                        fragmentCadeira.appendChild(rowCopy);
+                    }
+
+                    fragmentGeral.appendChild(fragmentCadeira);
+                }
+            });
+    });
+
+    await Promise.all(requests);
+
+    tabelaSelecaoTurmas.appendChild(fragmentGeral);
+
+    return tabelaSelecaoTurmas;
+}
+
 
 function obtemTituloTabelaTurmas() {
     return new Promise((resolve) => {

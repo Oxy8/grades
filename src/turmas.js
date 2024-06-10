@@ -173,7 +173,7 @@ function geraStringTurma(relacaoCodigosCadeiras, AtividadeDeEnsino, Turma, Vagas
 function createCachedRequestMontaGrade() {
     
     let cache = null;
-    let aDadosAntigo = null;
+    let requestDataAntigo = null;
   
     return async function() {
     
@@ -185,46 +185,35 @@ function createCachedRequestMontaGrade() {
         var sGrupoMatricula = document.getElementById("GrupoMatricula").value
         var iPeriodoLetivo = document.getElementById("PeriodoLetivo").value
 
-        const aDados = {
-            GradeUnica: 1,
-            PeriodoLetivo: iPeriodoLetivo,
-            GrupoMatricula: sGrupoMatricula,
-            'Atividades[]': codigosCadeirasSelecionadas
-        };
 
-        // aDados não precisa existir, eu posso montar estrutura final direto.
+        let requestData = new URLSearchParams();
+        requestData.append("GradeUnica", 1);
+        requestData.append("PeriodoLetivo", iPeriodoLetivo);
+        requestData.append("GrupoMatricula", sGrupoMatricula);
 
-        if (!cache || JSON.stringify(aDados) !== JSON.stringify(aDadosAntigo)) {
+        for (var atividade of codigosCadeirasSelecionadas) {
+            requestData.append('Atividades[]', atividade);
+        }
 
-            cache = await requestMontaGrade(aDados);
+        if (!cache || requestData.toString() !== requestDataAntigo.toString()) {
 
-            aDadosAntigo = aDados;
+            cache = await requestMontaGrade(requestData);
+
+            requestDataAntigo = requestData;
         }
         
         return cache;
     };
 }
 
-function requestMontaGrade(aDados) {
-    
-    let atividades = aDados['Atividades[]'];
-
-    let data = new URLSearchParams();
-
-    data.append("GradeUnica", 1);
-    data.append("PeriodoLetivo", aDados["PeriodoLetivo"]);
-    data.append("GrupoMatricula", aDados["GrupoMatricula"]);
-
-    for (var atividade of atividades) {
-        data.append('Atividades[]', atividade);
-    }
+function requestMontaGrade(requestData) {
 
     return fetch("/PortalEnsino/GradeHorarios/index.php?r=grade/montaGrade", {
         method: "POST",
         headers: {
             "Content-Type": "application/x-www-form-urlencoded"
         },
-        body: data
+        body: requestData
     })
     .then(response => response.arrayBuffer())
     .then(buffer => {

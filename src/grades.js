@@ -219,8 +219,6 @@ async function mostraGrades() {
     var turmasMesmoHorario = [];
 
     var conjuntoArraysTurmasSemConflito = await obtemGrades();
-    // a partir daqui, temos que acessar conjuntoArraysTurmasSemConflito com [0] ou [1].
-
 
     for (let i = 0; i < conjuntoArraysTurmasSemConflito.length; i++) {
         var grade = conjuntoArraysTurmasSemConflito[i][0];
@@ -288,11 +286,7 @@ function geraTextoNumeroCronogramas(numero) {
 async function obtemGrades() {
     
     var turmasOrganizadasPorAtividade = await organizaTurmasSelecionadasPorAtividade();
-    
-    // logo aqui, constroi array com turmas de mesmo horários reunidas
-    // array que vai conter infos a respeito das turmas que são representadas
-    // segue o mesmo esquema de indexamentos:
-    // array[atividade][turma]
+
     var arrayTurmasMesmoHorario;
     [turmasOrganizadasPorAtividade, arrayTurmasMesmoHorario] = achaTurmasMesmoHorario(turmasOrganizadasPorAtividade);
 
@@ -349,8 +343,6 @@ async function obtemGrades() {
 }
 
 function achaTurmasMesmoHorario(turmasOrganizadasPorAtividade) {
-    
-    // estrutura turma: [AtividadeDeEnsino, stringTurma, horarioCodificado, Cor]
 
     var arrayTurmasMesmoHorario = geraArrayTurmasMesmoHorarioVazia(turmasOrganizadasPorAtividade);
 
@@ -358,8 +350,8 @@ function achaTurmasMesmoHorario(turmasOrganizadasPorAtividade) {
 
         atividade = turmasOrganizadasPorAtividade[a];
 
-        let i = 0;
-        while (i < atividade.length) {
+        
+        for (let i = 0; i < atividade.length; i++) {
             
             let j = i+1;
             while (j < atividade.length) {
@@ -380,8 +372,6 @@ function achaTurmasMesmoHorario(turmasOrganizadasPorAtividade) {
                     j++;
                 }
             }
-
-            i++;
         }
     }
 

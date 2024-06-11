@@ -1,35 +1,22 @@
 
 const divGrades = document.getElementById("divGrade");
 
-// Recebe uma grade, retorna HTMLElement;
 
-//=========================================//
-// Precisa ser adaptada para receber par grade e turmas mesmo horario!
-//=========================================//
-function montaTabelaComGrade(grade, index) {
+function montaTabelaComGrade(grade, index, turmasMesmoHorario) {
     
     var tabela = geraTabelaVazia();
-
-    // grade = gradeEConflitos[0];
-
 
     for (var turma of grade) {
         adicionaTurmaTabela(tabela, turma);
     }
 
-    // turmasMesmoHorario = gradeETurmasMesmoHorario[0];
-    // tabelaTurmasMesmoHorario = geraTabelaTurmasMesmoHorario(turmasMesmoHorario);
-
-
-    tabelaComMoldura = geraMolduraTabela(tabela, index);
-    // tabelaComMoldura = geraMolduraTabela(tabela, tabelaTurmasMesmoHorario, index); ou
-    // tabelaComMoldura = geraMolduraTabelaGrade(tabela, tabelaTurmasMesmoHorario, index);
-    // (tem q melhorar os nomes, tabela e grade ta confuso qq é oq)
+    tabelaComMoldura = geraMolduraTabela(tabela, index, turmasMesmoHorario, grade);
 
     return tabelaComMoldura;
 }
 
-function geraMolduraTabela(tabela, index) {
+function geraMolduraTabela(tabela, index, turmasMesmoHorario, grade) {
+
     const fieldset = document.createElement('fieldset');
     fieldset.className = 'moldura';
     fieldset.style.backgroundColor = 'white';
@@ -43,18 +30,57 @@ function geraMolduraTabela(tabela, index) {
     i.appendChild(legend);
   
     i.appendChild(document.createElement('br'));
-  
-    const table = document.createElement('table');
-    table.className = 'modelo2';
-    i.appendChild(table);
-  
-    const tbody = document.createElement('tbody');
-    table.appendChild(tbody);
-  
-    
-    tbody.appendChild(tabela);
 
-  
+    i.appendChild(tabela);
+
+
+    const tabelaMesmoHorario = document.createElement('table');
+    const tbodyMesmoHorario = document.createElement('tbody');
+    tabelaMesmoHorario.appendChild(tbodyMesmoHorario);
+
+    function createLinhaMesmoHorario(cor, atividade, turmas) {
+        const tr = document.createElement('tr');
+        const td1 = document.createElement('td');
+        const td2 = document.createElement('td');
+        const font1 = document.createElement('font');
+        const font2 = document.createElement('font');
+
+        tr.setAttribute('height', "10px");
+
+        font1.style.color = cor;
+        font1.innerHTML = atividade;
+
+        font2.style.color = cor;
+        font2.innerHTML = turmas;
+
+        td1.appendChild(font1);
+        td2.appendChild(font2);
+        tr.appendChild(td1);
+        tr.appendChild(td2);
+
+        return tr;
+    }
+
+
+    for (let j = 0; j < turmasMesmoHorario.length; j++) {
+        arrayTurmas = turmasMesmoHorario[j];
+
+        if (arrayTurmas.length != 0) {
+
+            var atividade = "* " + arrayTurmas[0].split(" - ")[0];
+            var turmasAcc = [];
+
+            for (var turma of arrayTurmas){
+                turmasAcc.push(turma.slice(turma.indexOf(' - ')+3));
+            }
+            const row1 = createLinhaMesmoHorario(grade[j][3], atividade, "&nbsp;&nbsp;" + turmasAcc.join(";&nbsp;&nbsp;"));
+
+            tbodyMesmoHorario.appendChild(row1);
+        }
+    }
+
+    i.appendChild(tabelaMesmoHorario);
+
     return fieldset;
 }
 
@@ -193,11 +219,16 @@ async function mostraGrades() {
     var turmasMesmoHorario = [];
 
     var conjuntoArraysTurmasSemConflito = await obtemGrades();
+    // a partir daqui, temos que acessar conjuntoArraysTurmasSemConflito com [0] ou [1].
 
-    conjuntoArraysTurmasSemConflito.forEach((grade, index) => {
-        var tabelaGrade = montaTabelaComGrade(grade, index);
+
+    for (let i = 0; i < conjuntoArraysTurmasSemConflito.length; i++) {
+        var grade = conjuntoArraysTurmasSemConflito[i][0];
+        var turmasMesmoHorario = conjuntoArraysTurmasSemConflito[i][1];
+        
+        var tabelaGrade = montaTabelaComGrade(grade, i, turmasMesmoHorario);
         fragment.appendChild(tabelaGrade);
-    });
+    }
 
     fragment.appendChild(geraTextoNumeroCronogramas(conjuntoArraysTurmasSemConflito.length));
 
@@ -253,14 +284,24 @@ function geraTextoNumeroCronogramas(numero) {
     return paragraph;
 }
 
+
 async function obtemGrades() {
     
     var turmasOrganizadasPorAtividade = await organizaTurmasSelecionadasPorAtividade();
+    
+    // logo aqui, constroi array com turmas de mesmo horários reunidas
+    // array que vai conter infos a respeito das turmas que são representadas
+    // segue o mesmo esquema de indexamentos:
+    // array[atividade][turma]
+    var arrayTurmasMesmoHorario;
+    [turmasOrganizadasPorAtividade, arrayTurmasMesmoHorario] = achaTurmasMesmoHorario(turmasOrganizadasPorAtividade);
+
+
     var quantAtividades = turmasOrganizadasPorAtividade.length;
 
-    const indicesMaximosControle = new Array(quantAtividades).fill(0);
+    const quantidadeTurmasPorAtividade = new Array(quantAtividades).fill(0);
     for (let i=0; i<quantAtividades; i++) {
-        indicesMaximosControle[i] = turmasOrganizadasPorAtividade[i].length;
+        quantidadeTurmasPorAtividade[i] = turmasOrganizadasPorAtividade[i].length;
     }
 
     var indicesTurmaPorAtividade = new Array(quantAtividades).fill(0);
@@ -272,6 +313,11 @@ async function obtemGrades() {
 
         var arrayTurmasSemConflito = [];
 
+        var arrayTurmasMesmoHorarioSemConflito = [];
+        // contem uma array pra cada turma.
+        // se a turma nao tiver outras com mesmo horario,
+        // a array é vazia, senão, contem os nomes das turmas.
+
         var verificaConflitos = new Uint16Array(6);
         
         for (let i=0; i<quantAtividades; i++) {
@@ -281,7 +327,7 @@ async function obtemGrades() {
             var conflito = verificaConflitoHorarioCodificado(verificaConflitos, horarioCodificado);
 
             if (conflito) {
-                fim_do_loop = tentaIncrementarIndice(indicesMaximosControle, indicesTurmaPorAtividade, i);
+                fim_do_loop = tentaIncrementarIndice(quantidadeTurmasPorAtividade, indicesTurmaPorAtividade, i);
 
                 continue proximo_set;
 
@@ -289,27 +335,99 @@ async function obtemGrades() {
                 uniaoHorariosCodificados(verificaConflitos, horarioCodificado);
 
                 arrayTurmasSemConflito.push(turmasOrganizadasPorAtividade[i][indicesTurmaPorAtividade[i]]);
+                arrayTurmasMesmoHorarioSemConflito.push(arrayTurmasMesmoHorario[i][indicesTurmaPorAtividade[i]]);
             }
         }
 
         // Tenta incrementar o índice da última atividade, cuidando por um possível overflow.
-        fim_do_loop = tentaIncrementarIndice(indicesMaximosControle, indicesTurmaPorAtividade, quantAtividades-1);
-
-        conjuntoArraysTurmasSemConflito.push(arrayTurmasSemConflito);
+        fim_do_loop = tentaIncrementarIndice(quantidadeTurmasPorAtividade, indicesTurmaPorAtividade, quantAtividades-1);
+        
+        conjuntoArraysTurmasSemConflito.push([arrayTurmasSemConflito, arrayTurmasMesmoHorarioSemConflito]);
     }
-
+ 
     return conjuntoArraysTurmasSemConflito;
 }
 
-function tentaIncrementarIndice(indicesMaximosControle, indicesTurmaPorAtividade, indice) {
+function achaTurmasMesmoHorario(turmasOrganizadasPorAtividade) {
+    
+    // estrutura turma: [AtividadeDeEnsino, stringTurma, horarioCodificado, Cor]
+
+    var arrayTurmasMesmoHorario = geraArrayTurmasMesmoHorarioVazia(turmasOrganizadasPorAtividade);
+
+    for (let a = 0; a < turmasOrganizadasPorAtividade.length; a++) {
+
+        atividade = turmasOrganizadasPorAtividade[a];
+
+        let i = 0;
+        while (i < atividade.length) {
+            
+            let j = i+1;
+            while (j < atividade.length) {
+                
+                if (mesmoHorario(atividade[i][2], atividade[j][2])) {
+
+                    if (arrayTurmasMesmoHorario[a][i].length == 0) {
+                        arrayTurmasMesmoHorario[a][i].push(atividade[i][1]);
+                        arrayTurmasMesmoHorario[a][i].push(atividade[j][1]);
+                        turmasOrganizadasPorAtividade[a][i][1] = generalizaStringTurma(turmasOrganizadasPorAtividade[a][i][1]);
+                    } else {
+                        arrayTurmasMesmoHorario[a][i].push(atividade[j][1]);
+                    }
+
+                    atividade.splice(j, 1);
+
+                } else {            
+                    j++;
+                }
+            }
+
+            i++;
+        }
+    }
+
+    return [turmasOrganizadasPorAtividade, arrayTurmasMesmoHorario];
+}
+
+function mesmoHorario(hor1, hor2) {
+    for (let i = 0; i< hor1.length; i++) {
+        if (hor1[i] != hor2[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function generalizaStringTurma(stringTurma) {
+    var codigo = stringTurma.split(" - ")[0];
+    return codigo + " - *"
+}
+
+function geraArrayTurmasMesmoHorarioVazia(turmasOrganizadasPorAtividade) {
+    
+    var arrayTurmasMesmoHorario = new Array();
+
+    for (let a = 0; a < turmasOrganizadasPorAtividade.length; a++) {
+        atividade = turmasOrganizadasPorAtividade[a];
+        arrayTurmasMesmoHorario.push([]);
+
+        for (let i = 0; i < atividade.length; i++) {
+            arrayTurmasMesmoHorario[a].push([]);
+        }
+    }
+
+    return arrayTurmasMesmoHorario;
+
+}
+
+function tentaIncrementarIndice(quantidadeTurmasPorAtividade, indicesTurmaPorAtividade, indice) {
     if (indice == -1) {
         return true; // retorna erro aqui.
     }
     
     indicesTurmaPorAtividade[indice] += 1;
-    if (indicesTurmaPorAtividade[indice] >= indicesMaximosControle[indice]) {
+    if (indicesTurmaPorAtividade[indice] >= quantidadeTurmasPorAtividade[indice]) {
         zeraDoIndiceAoFim(indicesTurmaPorAtividade, indice);
-        return tentaIncrementarIndice(indicesMaximosControle, indicesTurmaPorAtividade, indice-1);
+        return tentaIncrementarIndice(quantidadeTurmasPorAtividade, indicesTurmaPorAtividade, indice-1);
     }
 
     return false;

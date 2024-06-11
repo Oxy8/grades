@@ -1,38 +1,14 @@
 
-Adicionar mecanismo para detectar se duas turmas da mesma cadeira possuem o mesmo horário.
-(deve ser fácil devido ao jeito com que eu codifiquei os horarios em Uint16[6], basta ver
-se as duas arrays são iguais) (criar buckets com cada um dos horários da turmas, e se o bucket
-for maior que 1, vamos usar o asterisco).
-Caso tenham o mesmo horário, estas devem ser mostradas como uma só na tabela de grades,
-com um rodapé indicando quais turmas estão sendo representadas de forma unida.
-
-
-
-
-
-//===============
-tabela a ser inserida no caso de turmas repetidas:
-
-<table>
-   <tbody>
-      <tr height="10px">
-         <td><font color="##808000"> * INF01032</font></td>
-         <td><font color="##808000">&nbsp;&nbsp;A  - 15;&nbsp;&nbsp;B  - 20</font></td>
-      </tr>
-      <tr height="10px">
-         <td><font color="##800000"> * INF05024</font></td>
-         <td><font color="##800000">&nbsp;&nbsp;A  - 2;&nbsp;&nbsp;B  - 2;&nbsp;&nbsp;C  - 2;&nbsp;&nbsp;D  - 2</font></td>
-      </tr>
-   </tbody>
-</table>
-
-
-
-
 
 //===============
 Algumas funções retornam promises sem necessidade, isso foi feito apenas pra garantir que iria funcionar,
 tem que ir de uma em uma e verificar o que realmente requer async/await/promises.
+
+
+
+//===============
+Não mostrar nada, ou mostrar indicador de carregamento enquanto listagem de turmas de cada
+atividade não tiver sido retornada. O jeito que ta agora, mostrando só o topo da tabela vazia ta feio.
 
 
 

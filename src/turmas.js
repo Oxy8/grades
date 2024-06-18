@@ -1,10 +1,21 @@
 
 async function organizaTurmasSelecionadasPorAtividade() {
-    
-    var arrayInfoTurmas = await constroiArrayInfoTurmas();
+    const tabelaSelecaoTurmas = document.getElementById("TabelaSelecaoTurmas");
+    const codigosCadeiras = await obtemCodigosCadeiras();
+    const tabelaCoresAtividades = await constroiTabelaCores();
+
+    const arrayInfoTurmas = [...tabelaSelecaoTurmas.rows].slice(1)
+        .filter(row => row.cells[0].firstChild.checked)
+        .map(turma => {
+            const horarioCell = turma.cells[5];
+            const [ , AtividadeDeEnsino, , Turma, VagasOferecidas] = [...turma.cells].map(cell => cell.textContent.trim());
+            const horarioCodificado = parseHorarioTurma(horarioCell);
+            const stringTurma = geraStringTurma(codigosCadeiras, AtividadeDeEnsino, Turma, VagasOferecidas);
+            return [AtividadeDeEnsino, stringTurma, horarioCodificado, tabelaCoresAtividades[AtividadeDeEnsino]];
+        });
+
 
     var turmasPorAtividade = [];
-
     for (var tripla of arrayInfoTurmas) {
 
         var aLength = turmasPorAtividade.length;
@@ -16,9 +27,16 @@ async function organizaTurmasSelecionadasPorAtividade() {
         }
     }
 
+    alertaUsuarioProblemasSelecao(turmasPorAtividade.length);
+
+    return turmasPorAtividade;
+}
+
+
+function alertaUsuarioProblemasSelecao(qtdCadeirasTurmasSelecionadas) {
+    
     var qtdCadeirasSelecionadas = document.getElementById("AtivEnsinoSelecionadas").children.length;
     var qtdCadeirasDisponiveis = obtemQuantidadeCadeirasDisponiveis();
-    var qtdCadeirasTurmasSelecionadas = turmasPorAtividade.length;
     
     if (qtdCadeirasSelecionadas > qtdCadeirasDisponiveis) {
         alert("Pelo menos uma das atividades selecionadas não tem turmas disponíveis neste semestre.");
@@ -27,65 +45,25 @@ async function organizaTurmasSelecionadasPorAtividade() {
     if (qtdCadeirasDisponiveis > qtdCadeirasTurmasSelecionadas) {
         alert("Existe pelo menos uma atividade com turmas disponíveis que não teve nenhuma turma selecionada. As grades serão geradas, mas tenha isso em mente.");
     }
-
-    return turmasPorAtividade;
 }
 
+
 function obtemQuantidadeCadeirasDisponiveis() {
-
-    var tabelaSelecaoTurmas = document.getElementById("TabelaSelecaoTurmas");
-
-    var listaAtividadesDeEnsino = []
+    const tabelaSelecaoTurmas = document.getElementById("TabelaSelecaoTurmas");
+    const listaAtividadesDeEnsino = [];
 
     for (let i = 1; i < tabelaSelecaoTurmas.rows.length; i++) {
-        var celulaCheckbox = tabelaSelecaoTurmas.rows[i].cells[0];
 
-        var listaLength = listaAtividadesDeEnsino.length
-
-        var AtividadeDeEnsino = tabelaSelecaoTurmas.rows[i].cells[1].textContent.trim();
-
-        if (listaLength == 0 || AtividadeDeEnsino != listaAtividadesDeEnsino[listaLength - 1]) {
+        const AtividadeDeEnsino = tabelaSelecaoTurmas.rows[i].cells[1].textContent.trim();
+        if (listaAtividadesDeEnsino.length === 0 || AtividadeDeEnsino !== listaAtividadesDeEnsino[listaAtividadesDeEnsino.length - 1]) {
             listaAtividadesDeEnsino.push(AtividadeDeEnsino);
         }
-    
     }
 
     return listaAtividadesDeEnsino.length;
 }
 
 
-async function constroiArrayInfoTurmas() {
-
-    var arrayInfoTurmas = [];
-
-    var tabelaSelecaoTurmas = document.getElementById("TabelaSelecaoTurmas");
-
-    var codigosCadeiras = await obtemCodigosCadeiras();
-
-    var tabelaCoresAtividades = await constroiTabelaCores();
-
-    for (let i = 1; i < tabelaSelecaoTurmas.rows.length; i++) {
-        var celulaCheckbox = tabelaSelecaoTurmas.rows[i].cells[0];
-
-        if (celulaCheckbox.firstChild.checked) {
-            
-            var celulaHorarios = tabelaSelecaoTurmas.rows[i].cells[5];
-            var horarioCodificado = parseHorarioTurma(celulaHorarios); //==//
-
-            var AtividadeDeEnsino = tabelaSelecaoTurmas.rows[i].cells[1].textContent.trim(); //==//
-            var Turma = tabelaSelecaoTurmas.rows[i].cells[3].textContent.trim();
-            var VagasOferecidas = tabelaSelecaoTurmas.rows[i].cells[4].textContent.trim();
-
-            var stringTurma = geraStringTurma(codigosCadeiras, AtividadeDeEnsino, Turma, VagasOferecidas); //==//
-
-            var Cor = tabelaCoresAtividades[AtividadeDeEnsino]; //==//
-
-            arrayInfoTurmas.push([AtividadeDeEnsino, stringTurma, horarioCodificado, Cor]);
-        }
-    }
-
-    return arrayInfoTurmas;
-}
 
 async function constroiTabelaCores() {
 
@@ -210,9 +188,7 @@ function requestMontaGrade(requestData) {
 
     return fetch("/PortalEnsino/GradeHorarios/index.php?r=grade/montaGrade", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-        },
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: requestData
     })
     .then(response => response.arrayBuffer())

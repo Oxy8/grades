@@ -10,29 +10,36 @@ function montaTabelaComGrade(grade, index, turmasMesmoHorario) {
         adicionaTurmaTabela(tabela, turma);
     }
 
-    tabelaComMoldura = geraMolduraTabela(tabela, index, turmasMesmoHorario, grade);
+    const tabelaComMoldura = document.createElement('fieldset');
+    tabelaComMoldura.className = 'moldura';
+    tabelaComMoldura.style.backgroundColor = 'white';
+
+    const i = geraMoldura(index);
+    i.appendChild(tabela);
+    i.appendChild(criaTabelaTurmasMesmoHorario(turmasMesmoHorario, grade));
+    tabelaComMoldura.appendChild(i);
+
 
     return tabelaComMoldura;
 }
 
-function geraMolduraTabela(tabela, index, turmasMesmoHorario, grade) {
+function geraMoldura(index) {
 
-    const fieldset = document.createElement('fieldset');
-    fieldset.className = 'moldura';
-    fieldset.style.backgroundColor = 'white';
-  
     const i = document.createElement('i');
-    fieldset.appendChild(i);
   
-    const legend = document.createElement('legend');
-    legend.className = 'legend-2';
-    legend.textContent = 'OPÇÃO ' + (index+1);
-    i.appendChild(legend);
+    if (index != -1) { // Se for grade única, index = -1;
+        const legend = document.createElement('legend');
+        legend.className = 'legend-2';
+        legend.textContent = 'OPÇÃO ' + (index+1);
+        i.appendChild(legend);
+    }
   
     i.appendChild(document.createElement('br'));
 
-    i.appendChild(tabela);
+    return i;
+}
 
+function criaTabelaTurmasMesmoHorario(turmasMesmoHorario, grade) {
 
     const tabelaMesmoHorario = document.createElement('table');
     const tbodyMesmoHorario = document.createElement('tbody');
@@ -40,72 +47,34 @@ function geraMolduraTabela(tabela, index, turmasMesmoHorario, grade) {
 
     function createLinhaMesmoHorario(cor, atividade, turmas) {
         const tr = document.createElement('tr');
-        const td1 = document.createElement('td');
-        const td2 = document.createElement('td');
-        const font1 = document.createElement('font');
-        const font2 = document.createElement('font');
-
         tr.setAttribute('height', "10px");
-
-        font1.style.color = cor;
-        font1.innerHTML = atividade;
-
-        font2.style.color = cor;
-        font2.innerHTML = turmas;
-
-        td1.appendChild(font1);
-        td2.appendChild(font2);
-        tr.appendChild(td1);
-        tr.appendChild(td2);
-
+    
+        [atividade, turmas].forEach(content => {
+            const td = document.createElement('td');
+            const font = document.createElement('font');
+            font.style.color = cor;
+            font.innerHTML = content;
+            td.appendChild(font);
+            tr.appendChild(td);
+        });
+    
         return tr;
     }
 
-
     for (let j = 0; j < turmasMesmoHorario.length; j++) {
-        arrayTurmas = turmasMesmoHorario[j];
+        let arrayTurmas = turmasMesmoHorario[j];
 
         if (arrayTurmas.length != 0) {
 
             var atividade = "* " + arrayTurmas[0].split(" - ")[0];
-            var turmasAcc = [];
-
-            for (var turma of arrayTurmas){
-                turmasAcc.push(turma.slice(turma.indexOf(' - ')+3));
-            }
+            let turmasAcc = arrayTurmas.map(turma => turma.slice(turma.indexOf(' - ') + 3));
             const row1 = createLinhaMesmoHorario(grade[j][3], atividade, "&nbsp;&nbsp;" + turmasAcc.join(";&nbsp;&nbsp;"));
 
             tbodyMesmoHorario.appendChild(row1);
         }
     }
 
-    i.appendChild(tabelaMesmoHorario);
-
-    return fieldset;
-}
-
-function geraMolduraTabelaUnica(tabela) {
-    const fieldset = document.createElement('fieldset');
-    fieldset.className = 'moldura';
-    fieldset.style.backgroundColor = 'white';
-  
-    const i = document.createElement('i');
-    fieldset.appendChild(i);
-  
-    i.appendChild(document.createElement('br'));
-  
-    const table = document.createElement('table');
-    table.className = 'modelo2';
-    i.appendChild(table);
-  
-    const tbody = document.createElement('tbody');
-    table.appendChild(tbody);
-  
-    
-    tbody.appendChild(tabela);
-
-  
-    return fieldset;
+    return tabelaMesmoHorario;
 }
   
 
@@ -180,49 +149,73 @@ function adicionaTurmaTabela(tabela, arrayTurma) {
     }
 }
 
-
 async function mostraGradeUnica() {
 
     let fragment = new DocumentFragment();
-
     await insereInfoFieldsetsOriginais(fragment);
 
-    var tabela = geraTabelaVazia();
+    var [turmasOrganizadasPorAtividade, arrayTurmasMesmoHorario] = await obtemTurmasEHorariosCoincidentes();
+    arrayTurmasMesmoHorario = arrayTurmasMesmoHorario.map((ativ) => ativ.flat(1));
 
-    var listaTurmas = await constroiArrayInfoTurmas();
+    var listaTurmas = turmasOrganizadasPorAtividade.flat(1);
 
-    for (var turma of listaTurmas) {
-        adicionaTurmaTabela(tabela, turma);
-    }
-
-    var tabelaComMoldura = geraMolduraTabelaUnica(tabela);
+    var tabelaComMoldura = montaTabelaComGrade(listaTurmas, -1, arrayTurmasMesmoHorario);
 
     fragment.appendChild(tabelaComMoldura);
     
-    if (divGrades.style.display == "inline") { // Se grades ja tiverem sido geradas previamente.
-        while (divGrades.firstChild) {
-            divGrades.removeChild(divGrades.lastChild);
+    removeGradesHorarias();
+    divGrades.appendChild(fragment);
+}
+
+async function obtemTurmasEHorariosCoincidentes() {
+    
+    var turmasOrganizadasPorAtividade = await organizaTurmasSelecionadasPorAtividade();  
+    var arrayTurmasMesmoHorario = geraArrayTurmasMesmoHorarioVazia(turmasOrganizadasPorAtividade);
+
+    for (let a = 0; a < turmasOrganizadasPorAtividade.length; a++) {
+
+        atividade = turmasOrganizadasPorAtividade[a];
+        
+        for (let i = 0; i < atividade.length; i++) {
+            
+            let j = i+1;
+            while (j < atividade.length) {
+                
+                if (mesmoHorario(atividade[i][2], atividade[j][2])) {
+
+                    if (arrayTurmasMesmoHorario[a][i].length == 0) {
+                        arrayTurmasMesmoHorario[a][i].push(atividade[i][1]);
+                        arrayTurmasMesmoHorario[a][i].push(atividade[j][1]);
+                        turmasOrganizadasPorAtividade[a][i][1] = generalizaStringTurma(turmasOrganizadasPorAtividade[a][i][1]);
+                    } else {
+                        arrayTurmasMesmoHorario[a][i].push(atividade[j][1]);
+                    }
+
+                    atividade.splice(j, 1);
+
+                } else {            
+                    j++;
+                }
+            }
         }
-    } else {
-        divGrades.style.display = "inline";
     }
 
-    divGrades.appendChild(fragment);
+    return [turmasOrganizadasPorAtividade, arrayTurmasMesmoHorario];
 }
 
 async function mostraGrades() {
 
     let fragment = new DocumentFragment();
-
     await insereInfoFieldsetsOriginais(fragment);
-
-    var turmasMesmoHorario = [];
 
     var conjuntoArraysTurmasSemConflito = await obtemGrades();
 
     for (let i = 0; i < conjuntoArraysTurmasSemConflito.length; i++) {
         var grade = conjuntoArraysTurmasSemConflito[i][0];
         var turmasMesmoHorario = conjuntoArraysTurmasSemConflito[i][1];
+
+        console.log("turmasMesmoHorario");
+        console.log(turmasMesmoHorario);
         
         var tabelaGrade = montaTabelaComGrade(grade, i, turmasMesmoHorario);
         fragment.appendChild(tabelaGrade);
@@ -231,7 +224,6 @@ async function mostraGrades() {
     fragment.appendChild(geraTextoNumeroCronogramas(conjuntoArraysTurmasSemConflito.length));
 
     removeGradesHorarias();
-    divGrades.style.display = "inline";
     divGrades.appendChild(fragment);
 }
 
@@ -240,9 +232,9 @@ function removeGradesHorarias() {
         while (divGrades.firstChild) {
             divGrades.removeChild(divGrades.lastChild);
         }
+    } else {
+        divGrades.style.display = "inline";
     }
-
-    divGrades.style.display = "none";
 }
 
 async function insereInfoFieldsetsOriginais(fragment) {
@@ -285,11 +277,7 @@ function geraTextoNumeroCronogramas(numero) {
 
 async function obtemGrades() {
     
-    var turmasOrganizadasPorAtividade = await organizaTurmasSelecionadasPorAtividade();
-
-    var arrayTurmasMesmoHorario;
-    [turmasOrganizadasPorAtividade, arrayTurmasMesmoHorario] = achaTurmasMesmoHorario(turmasOrganizadasPorAtividade);
-
+    const [turmasOrganizadasPorAtividade, arrayTurmasMesmoHorario] = await obtemTurmasEHorariosCoincidentes();
 
     var quantAtividades = turmasOrganizadasPorAtividade.length;
 
@@ -335,47 +323,11 @@ async function obtemGrades() {
 
         // Tenta incrementar o índice da última atividade, cuidando por um possível overflow.
         fim_do_loop = tentaIncrementarIndice(quantidadeTurmasPorAtividade, indicesTurmaPorAtividade, quantAtividades-1);
-        
+
         conjuntoArraysTurmasSemConflito.push([arrayTurmasSemConflito, arrayTurmasMesmoHorarioSemConflito]);
     }
  
     return conjuntoArraysTurmasSemConflito;
-}
-
-function achaTurmasMesmoHorario(turmasOrganizadasPorAtividade) {
-
-    var arrayTurmasMesmoHorario = geraArrayTurmasMesmoHorarioVazia(turmasOrganizadasPorAtividade);
-
-    for (let a = 0; a < turmasOrganizadasPorAtividade.length; a++) {
-
-        atividade = turmasOrganizadasPorAtividade[a];
-
-        
-        for (let i = 0; i < atividade.length; i++) {
-            
-            let j = i+1;
-            while (j < atividade.length) {
-                
-                if (mesmoHorario(atividade[i][2], atividade[j][2])) {
-
-                    if (arrayTurmasMesmoHorario[a][i].length == 0) {
-                        arrayTurmasMesmoHorario[a][i].push(atividade[i][1]);
-                        arrayTurmasMesmoHorario[a][i].push(atividade[j][1]);
-                        turmasOrganizadasPorAtividade[a][i][1] = generalizaStringTurma(turmasOrganizadasPorAtividade[a][i][1]);
-                    } else {
-                        arrayTurmasMesmoHorario[a][i].push(atividade[j][1]);
-                    }
-
-                    atividade.splice(j, 1);
-
-                } else {            
-                    j++;
-                }
-            }
-        }
-    }
-
-    return [turmasOrganizadasPorAtividade, arrayTurmasMesmoHorario];
 }
 
 function mesmoHorario(hor1, hor2) {

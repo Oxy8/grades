@@ -1,6 +1,6 @@
 {
   "name": "Grades",
-  "description": "Base Level Extension",
+  "description": "Permite a escolha de turmas na montagem de grades horárias no sistema da UFRGS",
   "version": "1.0",
   "manifest_version": 3,
   "browser_specific_settings": {
@@ -14,6 +14,5 @@
       "js": ["src/turmas.js", "src/grades.js", "src/observer.js"],
       "css" : ["tabela.css"]
     }
-  ]
-  
+  ]  
 }

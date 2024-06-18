@@ -1,5 +1,3 @@
-
-
 //===============
 Algumas funções retornam promises sem necessidade, isso foi feito apenas pra garantir que iria funcionar,
 tem que ir de uma em uma e verificar o que realmente requer async/await/promises.
@@ -11,4 +9,11 @@ Não mostrar nada, ou mostrar indicador de carregamento enquanto listagem de tur
 atividade não tiver sido retornada. O jeito que ta agora, mostrando só o topo da tabela vazia ta feio.
 
 
+//===============
+Extensão precisa ser estruturada de forma mais robusta, pra que ela consiga
+ser carregada com o website ja aberto.
+
+//===============
+Criar mmanifest v2 pra usar com firefox,
+MV3 não tem solução pras permissões sem que o usuário manualmente vá nas config e permite acesso ao site sempre.
 

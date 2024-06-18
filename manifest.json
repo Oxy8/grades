@@ -1,6 +1,6 @@
 {
   "name": "Grades",
-  "description": "Permite a escolha de turmas na montagem de grades horárias no sistema da UFRGS",
+  "description": "Habilita a escolha de turmas na montagem de grades horárias no sistema da UFRGS",
   "version": "1.0",
   "manifest_version": 3,
   "browser_specific_settings": {

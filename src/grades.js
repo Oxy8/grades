@@ -2,7 +2,7 @@
 const divGrades = document.getElementById("divGrade");
 
 
-function montaTabelaComGrade(grade, index, turmasMesmoHorario) {
+async function montaTabelaComGrade(grade, index, turmasMesmoHorario) {
     
     var tabela = geraTabelaVazia();
 
@@ -16,7 +16,8 @@ function montaTabelaComGrade(grade, index, turmasMesmoHorario) {
 
     const i = geraMoldura(index);
     i.appendChild(tabela);
-    i.appendChild(criaTabelaTurmasMesmoHorario(turmasMesmoHorario, grade));
+    let tabelaTurmasMesmoHorario = await criaTabelaTurmasMesmoHorario(turmasMesmoHorario);
+    i.appendChild(tabelaTurmasMesmoHorario);
     tabelaComMoldura.appendChild(i);
 
 
@@ -39,7 +40,9 @@ function geraMoldura(index) {
     return i;
 }
 
-function criaTabelaTurmasMesmoHorario(turmasMesmoHorario, grade) {
+async function criaTabelaTurmasMesmoHorario(turmasMesmoHorario) {
+
+    const tabelaCoresAtividades = await constroiTabelaCores();
 
     const tabelaMesmoHorario = document.createElement('table');
     const tbodyMesmoHorario = document.createElement('tbody');
@@ -66,9 +69,10 @@ function criaTabelaTurmasMesmoHorario(turmasMesmoHorario, grade) {
 
         if (arrayTurmas.length != 0) {
 
-            var atividade = "* " + arrayTurmas[0].split(" - ")[0];
+            var codAtividade = arrayTurmas[0].split(" - ")[0];
+
             let turmasAcc = arrayTurmas.map(turma => turma.slice(turma.indexOf(' - ') + 3));
-            const row1 = createLinhaMesmoHorario(grade[j][3], atividade, "&nbsp;&nbsp;" + turmasAcc.join(";&nbsp;&nbsp;"));
+            const row1 = createLinhaMesmoHorario(tabelaCoresAtividades[codAtividade], ("* " + codAtividade), "&nbsp;&nbsp;" + turmasAcc.join(";&nbsp;&nbsp;"));
 
             tbodyMesmoHorario.appendChild(row1);
         }
@@ -155,11 +159,12 @@ async function mostraGradeUnica() {
     await insereInfoFieldsetsOriginais(fragment);
 
     var [turmasOrganizadasPorAtividade, arrayTurmasMesmoHorario] = await obtemTurmasEHorariosCoincidentes();
+    
     arrayTurmasMesmoHorario = arrayTurmasMesmoHorario.map((ativ) => ativ.flat(1));
 
     var listaTurmas = turmasOrganizadasPorAtividade.flat(1);
 
-    var tabelaComMoldura = montaTabelaComGrade(listaTurmas, -1, arrayTurmasMesmoHorario);
+    var tabelaComMoldura = await montaTabelaComGrade(listaTurmas, -1, arrayTurmasMesmoHorario);
 
     fragment.appendChild(tabelaComMoldura);
     
@@ -213,11 +218,8 @@ async function mostraGrades() {
     for (let i = 0; i < conjuntoArraysTurmasSemConflito.length; i++) {
         var grade = conjuntoArraysTurmasSemConflito[i][0];
         var turmasMesmoHorario = conjuntoArraysTurmasSemConflito[i][1];
-
-        console.log("turmasMesmoHorario");
-        console.log(turmasMesmoHorario);
         
-        var tabelaGrade = montaTabelaComGrade(grade, i, turmasMesmoHorario);
+        var tabelaGrade = await montaTabelaComGrade(grade, i, turmasMesmoHorario);
         fragment.appendChild(tabelaGrade);
     }
 

@@ -10,8 +10,8 @@ async function organizaTurmasSelecionadasPorAtividade() {
             const horarioCell = turma.cells[5];
             const [ , AtividadeDeEnsino, , Turma, VagasOferecidas] = [...turma.cells].map(cell => cell.textContent.trim());
             const horarioCodificado = parseHorarioTurma(horarioCell);
-            const stringTurma = geraStringTurma(codigosCadeiras, AtividadeDeEnsino, Turma, VagasOferecidas);
-            return [AtividadeDeEnsino, stringTurma, horarioCodificado, tabelaCoresAtividades[AtividadeDeEnsino]];
+            const stringTurma = codigosCadeiras[AtividadeDeEnsino] + " - " + Turma + " - " + VagasOferecidas
+            return [AtividadeDeEnsino, stringTurma, horarioCodificado, tabelaCoresAtividades[codigosCadeiras[AtividadeDeEnsino]]];
         });
 
 
@@ -77,10 +77,9 @@ async function constroiTabelaCores() {
 
     var mapeamentoCores = {};
 
-    for (var label of labelsCodigosCadeiras) {   
-        var i = label.textContent.indexOf(' - ');
-        var nomeAtividade = label.textContent.slice(i+3);
-        mapeamentoCores[nomeAtividade] = label.style.color;
+    for (var label of labelsCodigosCadeiras) {
+        var codAtividade = label.textContent.split(' - ')[0];
+        mapeamentoCores[codAtividade] = label.style.color;
     }
 
     return mapeamentoCores;
@@ -134,18 +133,6 @@ function codificaUmHorario(Dia, HorarioInicio, NumeroPeriodos, arrayHorariosCodi
     }
 
     return arrayHorariosCodificados;
-}
-
-function geraStringTurma(relacaoCodigosCadeiras, AtividadeDeEnsino, Turma, VagasOferecidas) {
-
-    for (var pair of relacaoCodigosCadeiras) {
-        
-        let [CodigoD, NomeD] = pair;
-
-        if (NomeD.trim() == AtividadeDeEnsino) {
-            return (CodigoD + " - " + Turma + " - " + VagasOferecidas);
-        }
-    }
 }
 
 function createCachedRequestMontaGrade() {
@@ -205,7 +192,7 @@ const cachedRequestMontaGrade = createCachedRequestMontaGrade();
 
 async function obtemCodigosCadeiras() {
     
-    var arrayCodigosNomesCadeiras = [];
+    var arrayCodigosNomesCadeiras = {};
 
     var responseData = await cachedRequestMontaGrade();
 
@@ -217,8 +204,7 @@ async function obtemCodigosCadeiras() {
 
     for (var label of labelsCodigosCadeiras) {   
         var i = label.textContent.indexOf(' - ');
-        var splits = [label.textContent.slice(0,i), label.textContent.slice(i+3)];
-        arrayCodigosNomesCadeiras.push(splits);
+        arrayCodigosNomesCadeiras[label.textContent.slice(i+3)] = label.textContent.slice(0,i);
     }
 
     return arrayCodigosNomesCadeiras;

@@ -68,13 +68,13 @@ async function criaTabelaTurmasMesmoHorario(turmasMesmoHorario) {
         let arrayConflitos = turmasMesmoHorario[j];
 
         if (arrayConflitos.length != 0) {
-
-            var codAtividade = arrayConflitos[0][0].split(" - ")[0];
             
             for (let k = 0; k < arrayConflitos.length; k++) {
                 conflito = arrayConflitos[k];
 
                 if (conflito.length != 0) {
+
+                    var codAtividade = conflito[0].split(" - ")[0];
 
                     let turmasAcc = conflito.map(turma => turma.slice(turma.indexOf(' - ') + 3));
                     const row1 = createLinhaMesmoHorario(tabelaCoresAtividades[codAtividade], ("*".repeat(k+1) + " " + codAtividade), "&nbsp;&nbsp;" + turmasAcc.join(";&nbsp;&nbsp;"));

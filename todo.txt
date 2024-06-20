@@ -10,9 +10,3 @@ ser carregada com o website ja aberto.
 //===============
 Criar mmanifest v2 pra usar com firefox,
 MV3 não tem solução pras permissões sem que o usuário manualmente vá nas config e permite acesso ao site sempre.
-
-
-//===============
-Falta lidar com o caso de quando uma mesma atividade tem turmas que tem o mesmo horário em mais de um horário,
-, tem que usar ** e * para diferenceiar, além de ter uma entrada a mais na tabela.
-Isso tudo precisa ser implementado.

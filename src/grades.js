@@ -65,16 +65,23 @@ async function criaTabelaTurmasMesmoHorario(turmasMesmoHorario) {
     }
 
     for (let j = 0; j < turmasMesmoHorario.length; j++) {
-        let arrayTurmas = turmasMesmoHorario[j];
+        let arrayConflitos = turmasMesmoHorario[j];
 
-        if (arrayTurmas.length != 0) {
+        if (arrayConflitos.length != 0) {
 
-            var codAtividade = arrayTurmas[0].split(" - ")[0];
+            var codAtividade = arrayConflitos[0][0].split(" - ")[0];
+            
+            for (let k = 0; k < arrayConflitos.length; k++) {
+                conflito = arrayConflitos[k];
 
-            let turmasAcc = arrayTurmas.map(turma => turma.slice(turma.indexOf(' - ') + 3));
-            const row1 = createLinhaMesmoHorario(tabelaCoresAtividades[codAtividade], ("* " + codAtividade), "&nbsp;&nbsp;" + turmasAcc.join(";&nbsp;&nbsp;"));
+                if (conflito.length != 0) {
 
-            tbodyMesmoHorario.appendChild(row1);
+                    let turmasAcc = conflito.map(turma => turma.slice(turma.indexOf(' - ') + 3));
+                    const row1 = createLinhaMesmoHorario(tabelaCoresAtividades[codAtividade], ("*".repeat(k+1) + " " + codAtividade), "&nbsp;&nbsp;" + turmasAcc.join(";&nbsp;&nbsp;"));
+
+                    tbodyMesmoHorario.appendChild(row1);
+                }
+            }
         }
     }
 
@@ -158,10 +165,8 @@ async function mostraGradeUnica() {
     let fragment = new DocumentFragment();
     await insereInfoFieldsetsOriginais(fragment);
 
-    var [turmasOrganizadasPorAtividade, arrayTurmasMesmoHorario] = await obtemTurmasEHorariosCoincidentes();
-    
-    arrayTurmasMesmoHorario = arrayTurmasMesmoHorario.map((ativ) => ativ.flat(1));
-
+    var [turmasOrganizadasPorAtividade, arrayTurmasMesmoHorario] = await obtemTurmasEHorariosCoincidentes(true);
+    //arrayTurmasMesmoHorario = arrayTurmasMesmoHorario.map((ativ) => ativ.flat(1));
     var listaTurmas = turmasOrganizadasPorAtividade.flat(1);
 
     var tabelaComMoldura = await montaTabelaComGrade(listaTurmas, -1, arrayTurmasMesmoHorario);
@@ -172,15 +177,18 @@ async function mostraGradeUnica() {
     divGrades.appendChild(fragment);
 }
 
-async function obtemTurmasEHorariosCoincidentes() {
+async function obtemTurmasEHorariosCoincidentes(gradeUnica) {
     
     var turmasOrganizadasPorAtividade = await organizaTurmasSelecionadasPorAtividade();  
     var arrayTurmasMesmoHorario = geraArrayTurmasMesmoHorarioVazia(turmasOrganizadasPorAtividade);
-
-    for (let a = 0; a < turmasOrganizadasPorAtividade.length; a++) {
+    
+    let a = 0;
+    while (a < turmasOrganizadasPorAtividade.length) {
 
         atividade = turmasOrganizadasPorAtividade[a];
         
+        let quantidadeConflitos = 0;        
+
         for (let i = 0; i < atividade.length; i++) {
             
             let j = i+1;
@@ -189,9 +197,16 @@ async function obtemTurmasEHorariosCoincidentes() {
                 if (mesmoHorario(atividade[i][2], atividade[j][2])) {
 
                     if (arrayTurmasMesmoHorario[a][i].length == 0) {
+                        
+                        quantidadeConflitos += 1;
+                        
                         arrayTurmasMesmoHorario[a][i].push(atividade[i][1]);
                         arrayTurmasMesmoHorario[a][i].push(atividade[j][1]);
-                        turmasOrganizadasPorAtividade[a][i][1] = generalizaStringTurma(turmasOrganizadasPorAtividade[a][i][1]);
+                        if (gradeUnica) {
+                            turmasOrganizadasPorAtividade[a][i][1] = generalizaStringTurma(turmasOrganizadasPorAtividade[a][i][1], quantidadeConflitos);
+                        } else {
+                            turmasOrganizadasPorAtividade[a][i][1] = generalizaStringTurma(turmasOrganizadasPorAtividade[a][i][1], 1);
+                        }
                     } else {
                         arrayTurmasMesmoHorario[a][i].push(atividade[j][1]);
                     }
@@ -203,6 +218,11 @@ async function obtemTurmasEHorariosCoincidentes() {
                 }
             }
         }
+        
+        if (quantidadeConflitos == 0) {
+            a++
+        }
+        
     }
 
     return [turmasOrganizadasPorAtividade, arrayTurmasMesmoHorario];
@@ -279,7 +299,7 @@ function geraTextoNumeroCronogramas(numero) {
 
 async function obtemGrades() {
     
-    const [turmasOrganizadasPorAtividade, arrayTurmasMesmoHorario] = await obtemTurmasEHorariosCoincidentes();
+    const [turmasOrganizadasPorAtividade, arrayTurmasMesmoHorario] = await obtemTurmasEHorariosCoincidentes(false);
 
     var quantAtividades = turmasOrganizadasPorAtividade.length;
 
@@ -319,7 +339,7 @@ async function obtemGrades() {
                 uniaoHorariosCodificados(verificaConflitos, horarioCodificado);
 
                 arrayTurmasSemConflito.push(turmasOrganizadasPorAtividade[i][indicesTurmaPorAtividade[i]]);
-                arrayTurmasMesmoHorarioSemConflito.push(arrayTurmasMesmoHorario[i][indicesTurmaPorAtividade[i]]);
+                arrayTurmasMesmoHorarioSemConflito.push([arrayTurmasMesmoHorario[i][indicesTurmaPorAtividade[i]]]);
             }
         }
 
@@ -341,9 +361,9 @@ function mesmoHorario(hor1, hor2) {
     return true;
 }
 
-function generalizaStringTurma(stringTurma) {
+function generalizaStringTurma(stringTurma, quantidadeConflitos) {
     var codigo = stringTurma.split(" - ")[0];
-    return codigo + " - *"
+    return codigo + " - " + ("*".repeat(quantidadeConflitos));
 }
 
 function geraArrayTurmasMesmoHorarioVazia(turmasOrganizadasPorAtividade) {

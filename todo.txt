@@ -10,3 +10,7 @@ ser carregada com o website ja aberto.
 //===============
 Criar mmanifest v2 pra usar com firefox,
 MV3 não tem solução pras permissões sem que o usuário manualmente vá nas config e permite acesso ao site sempre.
+
+
+//===============
+Adicionar botao para selecionar / desselecionar todas as turmas.
